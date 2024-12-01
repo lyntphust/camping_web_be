@@ -6,4 +6,12 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_PASSWORD: pass123
+      - POSTGRES_PASSWORD=camping_web
+      - POSTGRES_USER=camping_web
+      - POSTGRES_DB=camping_web
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
