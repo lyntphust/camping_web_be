@@ -1,11 +1,11 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-
+import { ProductVariant } from './product-variant.entity';
 import { OrdersProducts } from 'src/order/entities/orders-products.entity';
 
 @Entity()
 export class Product {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ length: 50 })
   name: string;
@@ -33,6 +33,9 @@ export class Product {
 
   @Column({ length: 50 })
   category: string;
+
+  @OneToMany(() => ProductVariant, (variant) => variant.product)
+  variants: ProductVariant[]; // Liên kết với bảng ProductVariant
 
   @OneToMany(
     () => OrdersProducts,

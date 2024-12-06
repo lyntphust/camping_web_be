@@ -1,10 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
 
 export class RolesData1643393316877 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`INSERT INTO Role VALUES ('${uuidv4()}', 'user')`);
-    await queryRunner.query(`INSERT INTO Role VALUES ('${uuidv4()}', 'admin')`);
+    await queryRunner.query(`INSERT INTO Role (name) VALUES ('user')`);
+    await queryRunner.query(`INSERT INTO Role (name) VALUES ('admin')`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

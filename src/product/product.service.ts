@@ -35,7 +35,7 @@ export class ProductService {
     return products;
   }
 
-  async findManyByIds(arrayOfIds: Array<string>) {
+  async findManyByIds(arrayOfIds: Array<number>) {
     const products = await this.productRepository
       .createQueryBuilder()
       .where('id IN(:...arrayOfIds)', { arrayOfIds })
@@ -44,7 +44,7 @@ export class ProductService {
     return products;
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const product = await this.productRepository.findOne(id);
 
     if (!product) {
@@ -73,7 +73,7 @@ export class ProductService {
     return this.productRepository.save(product);
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
+  async update(id: number, updateProductDto: UpdateProductDto) {
     const product = await this.productRepository.preload({
       id,
       ...updateProductDto,
@@ -86,7 +86,7 @@ export class ProductService {
     return this.productRepository.save(product);
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     const product = await this.findOne(id);
 
     return this.productRepository.remove(product);

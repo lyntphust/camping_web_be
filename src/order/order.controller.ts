@@ -44,8 +44,8 @@ export class OrderController {
   @Permission('GET_ORDER_ALL')
   @UseGuards(PermissionGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.orderService.findOne(id);
+  async findOne(@Param('id') id: number) {
+    return this.orderService.findOne(+id);
   }
 
   @Permission('GET_ORDER_SELF')
@@ -75,7 +75,7 @@ export class OrderController {
   @UseGuards(PermissionGuard)
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateOrderDto: UpdateOrderDto,
   ) {
     return this.orderService.update(id, updateOrderDto);
@@ -84,7 +84,7 @@ export class OrderController {
   @Permission('REMOVE_ORDER_ALL')
   @UseGuards(PermissionGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: number) {
     return this.orderService.remove(id);
   }
 }

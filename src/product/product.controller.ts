@@ -20,9 +20,10 @@ import { PermissionGuard } from 'src/role/guards/permission.guard';
 
 import { ProductService } from './product.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('product')
+@ApiBearerAuth()
 export class ProductController {
   constructor(private readonly productService: ProductService) { }
 
@@ -37,7 +38,7 @@ export class ProductController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: number) {
     return this.productService.findOne(id);
   }
 
@@ -88,16 +89,16 @@ export class ProductController {
   // @UseGuards(PermissionGuard)
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return this.productService.update(id, updateProductDto);
+    return this.productService.update(+id, updateProductDto);
   }
 
   // @Permission('CRUD_PRODUCT_ALL')
   // @UseGuards(PermissionGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: number) {
     return this.productService.remove(id);
   }
 }

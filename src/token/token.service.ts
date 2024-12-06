@@ -16,7 +16,7 @@ export class TokenService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async setRefreshToken(id: string, refreshToken: string) {
+  async setRefreshToken(id: number, refreshToken: string) {
     const user = await this.userService.findOne(id);
 
     return this.userRepository.save({
@@ -25,7 +25,7 @@ export class TokenService {
     });
   }
 
-  async getRefreshToken(id: string) {
+  async getRefreshToken(id: number) {
     const user = await this.userService.findOne(id);
 
     const token = user.refreshToken;
@@ -33,7 +33,7 @@ export class TokenService {
     return token;
   }
 
-  async removeRefreshToken(id: string) {
+  async removeRefreshToken(id: number) {
     const user = await this.userService.findOne(id);
 
     return this.userRepository.save({
@@ -58,7 +58,7 @@ export class TokenService {
     return decodedId;
   }
 
-  async generateTokens(id: string) {
+  async generateTokens(id: number) {
     const payload = { id };
 
     const accessToken = this.jwtService.sign(payload, {
@@ -66,14 +66,8 @@ export class TokenService {
       expiresIn: '30m',
     });
 
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: '30d',
-    });
-
-    await this.setRefreshToken(id, refreshToken);
-
-    return { accessToken, refreshToken };
+    console.log(accessToken);
+    return accessToken;
   }
 
   async isRefreshTokenValid(refreshToken: string) {

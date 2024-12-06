@@ -6,15 +6,13 @@ import {
   IsInt,
   IsNumber,
   IsString,
-  IsUUID,
   Min,
   ValidateNested,
 } from 'class-validator';
 
 export class ProductDto {
-  @IsUUID()
   @ApiProperty()
-  id: string;
+  id: number;
 
   @IsNumber()
   @IsInt()

@@ -9,11 +9,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 import { RoleService } from '../role/role.service';
+import { ProductCart } from 'src/product/enities/product-cart.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(ProductCart)
+    private readonly productCartRepository: Repository<ProductCart>,
     private readonly roleService: RoleService,
   ) {}
 
@@ -25,7 +28,7 @@ export class UserService {
     return users;
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const user = await this.userRepository.findOne(id, {
       relations: ['role'],
     });
@@ -57,7 +60,7 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto) {
     const role =
       updateUserDto.roleName &&
       (await this.roleService.findOneByName(updateUserDto.roleName));
@@ -75,9 +78,51 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     const user = await this.findOne(id);
 
     return this.userRepository.remove(user);
+  }
+
+  async addProductToCart(productId: number, userId: number, quantity: number) {
+    const existingCartItem = await this.productCartRepository.findOne({
+      where: { productId, userId },
+    });
+
+    if (existingCartItem) {
+      existingCartItem.quantity += quantity;
+      await this.productCartRepository.save(existingCartItem);
+    } else {
+      await this.productCartRepository.save({ productId, userId, quantity });
+    }
+  }
+
+  async getProductList(userId: number) {
+    const productCarts = await this.productCartRepository
+      .createQueryBuilder('productCart')
+      .innerJoinAndSelect('productCart.productVariant', 'productVariant') // Join ProductVariant
+      .innerJoinAndSelect('productVariant.product', 'product') // Join Product
+      .where('productCart.userId = :userId', { userId })
+      .select([
+        'productCart.id',
+        'productCart.quantity',
+        'productVariant.id',
+        'productVariant.size',
+        'productVariant.color',
+        'productVariant.price',
+        'product.id',
+        'product.name',
+        'product.description',
+        'product.photo',
+      ])
+      .getMany();
+
+    if (productCarts.length === 0) {
+      throw new NotFoundException(
+        'No products found in the cart for this user.',
+      );
+    }
+
+    return productCarts;
   }
 }

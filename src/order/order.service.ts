@@ -35,7 +35,7 @@ export class OrderService {
     return orders;
   }
 
-  async findAllByUserId(id: string) {
+  async findAllByUserId(id: number) {
     const orders = await this.orderRepository.find({
       where: {
         user: id,
@@ -49,7 +49,7 @@ export class OrderService {
     return orders;
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     const order = await this.orderRepository.findOne(id);
 
     if (!order) {
@@ -71,7 +71,7 @@ export class OrderService {
     return order;
   }
 
-  async create(userId: string, createOrderDto: CreateOrderDto) {
+  async create(userId: number, createOrderDto: CreateOrderDto) {
     const status = Status.NEEDS_CONFIRMATION;
     const productsDto = createOrderDto.products;
 
@@ -90,19 +90,19 @@ export class OrderService {
       ...createOrderDto,
       userId,
       status,
-      price,
+      // price,
       stripeId: session.id,
     });
 
     const savedOrder = await this.orderRepository.save(order);
 
-    const ordersProducts = products.map((product) => ({
-      orderId: savedOrder.id,
-      productId: product.id,
-      quantity: productsMap.get(product.id),
-    }));
+    // const ordersProducts = products.map((product) => ({
+    //   orderId: savedOrder.id,
+    //   productId: product.id,
+    //   quantity: productsMap.get(product.id),
+    // }));
 
-    await this.ordersProductsRepository.save(ordersProducts);
+    // await this.ordersProductsRepository.save(ordersProducts);
 
     return session.url;
   }
@@ -115,7 +115,7 @@ export class OrderService {
     return this.update(order.id, orderStatusObject);
   }
 
-  async update(id: string, updateOrderDto: UpdateOrderDto) {
+  async update(id: number, updateOrderDto: UpdateOrderDto) {
     const order = await this.orderRepository.preload({
       id,
       ...updateOrderDto,
@@ -128,7 +128,7 @@ export class OrderService {
     return this.orderRepository.save(order);
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     const order = await this.findOne(id);
 
     return this.orderRepository.remove(order);
@@ -136,14 +136,14 @@ export class OrderService {
 
   private async getTotalPrice(
     products: Array<Product>,
-    productsMap: Map<string, number>,
+    productsMap: Map<number, number>,
   ) {
-    const price = products.reduce(
-      (sum, current) => sum + +current.price * productsMap.get(current.id),
-      0,
-    );
+    // const price = products.reduce(
+    //   (sum, current) => sum + +current.price * productsMap.get(current.id),
+    //   0,
+    // );
 
-    return price;
+    // return price;
   }
 
   private async createPaymentSession(items) {
@@ -161,7 +161,7 @@ export class OrderService {
   }
 
   private createProductQuantityMap(productsDto: Array<ProductDto>) {
-    const productsMap = new Map<string, number>(); //productId -> quantity
+    const productsMap = new Map<number, number>(); //productId -> quantity
 
     for (const product of productsDto) {
       const { id, quantity } = product;
@@ -174,19 +174,19 @@ export class OrderService {
 
   private createPaymentItems(
     products: Array<Product>,
-    productsMap: Map<string, number>,
+    productsMap: Map<number, number>,
   ) {
-    const paymentItems = products.map((product) => ({
-      price_data: {
-        currency: 'usd',
-        product_data: {
-          name: product.name,
-        },
-        unit_amount: product.price * 100,
-      },
-      quantity: productsMap.get(product.id),
-    }));
+    // const paymentItems = products.map((product) => ({
+    //   price_data: {
+    //     currency: 'usd',
+    //     product_data: {
+    //       name: product.name,
+    //     },
+    //     unit_amount: product.price * 100,
+    //   },
+    //   quantity: productsMap.get(product.id),
+    // }));
 
-    return paymentItems;
+    // return paymentItems;
   }
 }

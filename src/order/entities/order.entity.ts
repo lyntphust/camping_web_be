@@ -11,8 +11,8 @@ import { OrdersProducts } from './orders-products.entity';
 
 @Entity()
 export class Order {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ length: 50 })
   adress: string;
@@ -36,7 +36,7 @@ export class Order {
   user: User;
 
   @Column()
-  userId: string;
+  userId: number;
 
   @OneToMany(
     () => OrdersProducts,

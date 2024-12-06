@@ -13,8 +13,8 @@ import { ProductCart } from 'src/product/enities/product-cart.entity';
 
 @Entity()
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column({ length: 25 })
   name: string;

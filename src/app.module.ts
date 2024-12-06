@@ -16,6 +16,9 @@ import { Role } from './role/entities/role.entity';
 import { Order } from './order/entities/order.entity';
 import { OrdersProducts } from './order/entities/orders-products.entity';
 import { Permission } from './user/entities/permission.entity';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/auth.guard';
+import { ProductVariant } from './product/enities/product-variant.entity';
 
 @Module({
   imports: [
@@ -35,6 +38,7 @@ import { Permission } from './user/entities/permission.entity';
         Order,
         OrdersProducts,
         Permission,
+        ProductVariant
       ],
       autoLoadEntities: true,
       synchronize: false,
@@ -49,6 +53,12 @@ import { Permission } from './user/entities/permission.entity';
     RoleModule,
     AuthModule,
     TokenModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
   ],
 })
 export class AppModule {}
