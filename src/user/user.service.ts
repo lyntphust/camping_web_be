@@ -8,8 +8,9 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-import { RoleService } from '../role/role.service';
 import { ProductCart } from 'src/product/enities/product-cart.entity';
+import { S3CoreService } from 'src/s3/src';
+import { RoleService } from '../role/role.service';
 
 @Injectable()
 export class UserService {
@@ -18,6 +19,7 @@ export class UserService {
     @InjectRepository(ProductCart)
     private readonly productCartRepository: Repository<ProductCart>,
     private readonly roleService: RoleService,
+    private readonly s3Service: S3CoreService,
   ) {}
 
   async findAll() {
@@ -86,7 +88,7 @@ export class UserService {
 
   async addProductToCart(productId: number, userId: number, quantity: number) {
     const existingCartItem = await this.productCartRepository.findOne({
-      where: { productId, userId },
+      where: { productVariantId: productId, userId },
     });
 
     if (existingCartItem) {
@@ -123,6 +125,20 @@ export class UserService {
       );
     }
 
-    return productCarts;
+    for (let i = 0; i < productCarts.length; i++) {
+      const imageLink = await this.s3Service.getLinkFromS3(
+        productCarts[i].productVariant.product.photo,
+      );
+
+      productCarts[i].productVariant.product.photo = imageLink;
+    }
+
+    return {
+      total: productCarts.reduce(
+        (acc, curr) => acc + curr.productVariant.price * curr.quantity,
+        0,
+      ),
+      items: productCarts,
+    };
   }
 }
