@@ -145,7 +145,7 @@ export class UserService {
   async removeProductFromCart(productId: number, userId: number) {
     // Tìm sản phẩm trong giỏ hàng dựa trên productId và userId
     const existingCartItem = await this.productCartRepository.findOne({
-      where: { productId, userId },
+      where: { productVariantId: productId, userId },
     });
 
     if (!existingCartItem) {
