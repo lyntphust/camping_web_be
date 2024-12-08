@@ -37,9 +37,4 @@ export class Product {
   @OneToMany(() => ProductVariant, (variant) => variant.product)
   variants: ProductVariant[]; // Liên kết với bảng ProductVariant
 
-  @OneToMany(
-    () => OrdersProducts,
-    (OrdersProducts: OrdersProducts) => OrdersProducts.product,
-  )
-  OrdersProducts: OrdersProducts[];
 }

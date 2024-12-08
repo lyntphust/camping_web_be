@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -33,6 +34,7 @@ export class Order {
   stripeId: string;
 
   @ManyToOne(() => User, (user: User) => user.orders)
+  @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column()

@@ -13,10 +13,11 @@ import { OrderController } from './order.controller';
 
 import { OrderService } from './order.service';
 import { OrdersProducts } from './entities/orders-products.entity';
+import { ProductVariant } from 'src/product/enities/product-variant.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrdersProducts]),
+    TypeOrmModule.forFeature([Order, OrdersProducts, ProductVariant]),
     ProductModule,
     UserModule,
     TokenModule,

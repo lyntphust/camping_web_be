@@ -1,4 +1,12 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { OrdersProducts } from 'src/order/entities/orders-products.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Product } from './product.entity';
 
 @Entity()
@@ -24,6 +32,12 @@ export class ProductVariant {
   @ManyToOne(() => Product, (product) => product.variants, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'product_id' }) 
+  @JoinColumn({ name: 'product_id' })
   product: Product; // Liên kết tới bảng Product
+
+  @OneToMany(
+    () => OrdersProducts,
+    (ordersProducts) => ordersProducts.productVariant,
+  )
+  ordersProducts: OrdersProducts[];
 }

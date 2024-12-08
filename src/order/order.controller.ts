@@ -14,77 +14,49 @@ import {
 import { Request } from 'express';
 
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
-import { OnPaymentSuccessQuery } from './dto/on-payment-success.dto';
-
-import { Permission } from 'src/role/decorators/permission.decorator';
-
-import { PermissionGuard } from 'src/role/guards/permission.guard';
 
 import { AuthService } from 'src/auth/auth.service';
 import { OrderService } from './order.service';
+import { GetUser } from 'src/decorator/getUser.decorator';
+import { AuthPayload } from 'src/decorator/getUser.decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/decorator/public.decorator';
 
 @Controller('order')
+@ApiBearerAuth()
+@ApiTags('order')
 export class OrderController {
   constructor(
     private readonly orderService: OrderService,
     private readonly authService: AuthService,
   ) {}
 
-  @Get('/success')
-  async onPaymentSuccess(@Query() queryParams: OnPaymentSuccessQuery) {
-    return this.orderService.onPaymentSuccess(queryParams.session_id);
-  }
-
-  @Get('/cancel')
-  async onPaymentCanceled() {
-    return 'Your payment has been canceled!';
-  }
-
-  @Permission('GET_ORDER_ALL')
-  @UseGuards(PermissionGuard)
-  @Get(':id')
-  async findOne(@Param('id') id: number) {
-    return this.orderService.findOne(+id);
-  }
-
-  @Permission('GET_ORDER_SELF')
-  @UseGuards(PermissionGuard)
-  @Get()
-  async findAllByUserId(@Req() req: Request) {
-    const { id } = await this.authService.parseAuthorizationHeaders(
-      req.headers.authorization,
-    );
-
-    return this.orderService.findAllByUserId(id);
-  }
-
-  @Permission('CREATE_ORDER_SELF')
-  @UseGuards(PermissionGuard)
   @Post()
-  async create(@Req() req: Request, @Body() createOrderDto: CreateOrderDto) {
-    const payload = await this.authService.parseAuthorizationHeaders(
-      req.headers.authorization,
-    );
-    const userId = payload.id;
-
-    return this.orderService.create(userId, createOrderDto);
-  }
-
-  @Permission('UPDATE_ORDER_ALL')
-  @UseGuards(PermissionGuard)
-  @Patch(':id')
-  async update(
-    @Param('id') id: number,
-    @Body() updateOrderDto: UpdateOrderDto,
+  async createOrder(
+    @GetUser() user: AuthPayload,
+    @Body() createOrderDto: CreateOrderDto,
   ) {
-    return this.orderService.update(id, updateOrderDto);
+    return await this.orderService.createOrder(user.id, createOrderDto);
   }
 
-  @Permission('REMOVE_ORDER_ALL')
-  @UseGuards(PermissionGuard)
-  @Delete(':id')
-  async remove(@Param('id') id: number) {
-    return this.orderService.remove(id);
+  /**
+   * Get all orders for the authenticated user.
+   */
+  @Get()
+  async getUserOrders(@GetUser() user: AuthPayload) {
+    const userId = user.id;
+    return await this.orderService.getUserOrders(userId);
+  }
+
+  /**
+   * Admin updates the status of an order.
+   */
+  @Public()
+  @Patch(':orderId/:status')
+  async updateOrderStatus(
+    @Param('orderId') orderId: number,
+    @Param('status') status: string,
+  ) {
+    return await this.orderService.updateOrderStatus(orderId, status);
   }
 }

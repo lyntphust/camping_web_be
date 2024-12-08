@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { Product } from 'src/product/enities/product.entity';
+import { ProductVariant } from 'src/product/enities/product-variant.entity';
 import { Order } from './order.entity';
 
 @Entity()
@@ -18,16 +18,16 @@ export class OrdersProducts {
   @PrimaryColumn()
   orderId: number;
 
-  @ManyToOne((type) => Order, (order) => order.OrdersProducts)
+  @ManyToOne(() => Order, (order) => order.OrdersProducts)
   @JoinColumn({ name: 'orderId' })
   order: Order;
 
   @PrimaryColumn()
-  productId: number;
+  productVariantId: number;
 
-  @ManyToOne((type) => Product, (product) => product.OrdersProducts)
-  @JoinColumn({ name: 'productId' })
-  product: Product;
+  @ManyToOne(() => ProductVariant, (productVariant) => productVariant.id)
+  @JoinColumn({ name: 'productVariantId' })
+  productVariant: ProductVariant;
 
   @Column()
   quantity: number;

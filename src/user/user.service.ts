@@ -141,4 +141,24 @@ export class UserService {
       items: productCarts,
     };
   }
+
+  async removeProductFromCart(productId: number, userId: number) {
+    // Tìm sản phẩm trong giỏ hàng dựa trên productId và userId
+    const existingCartItem = await this.productCartRepository.findOne({
+      where: { productId, userId },
+    });
+
+    if (!existingCartItem) {
+      throw new NotFoundException(
+        `Product with ID ${productId} not found in the cart for user with ID ${userId}.`,
+      );
+    }
+
+    // Xóa sản phẩm khỏi giỏ hàng
+    await this.productCartRepository.remove(existingCartItem);
+
+    return {
+      message: `Product with ID ${productId} has been removed from the cart.`,
+    };
+  }
 }

@@ -1,21 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-
-import Stripe from 'stripe';
 import { Repository } from 'typeorm';
-
-import { Status } from './enums/status.enum';
+import { InjectStripe } from 'nestjs-stripe';
+import Stripe from 'stripe';
 
 import { Order } from './entities/order.entity';
-import { Product } from 'src/product/enities/product.entity';
 import { OrdersProducts } from './entities/orders-products.entity';
-
-import { CreateOrderDto, ProductDto } from '../order/dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
-
+import { CreateOrderDto, ProductDto } from './dto/create-order.dto';
 import { ProductService } from '../product/product.service';
 import { UserService } from '../user/user.service';
-import { InjectStripe } from 'nestjs-stripe';
+import { Status } from './enums/status.enum';
+import { ProductVariant } from 'src/product/enities/product-variant.entity';
 
 @Injectable()
 export class OrderService {
@@ -24,169 +23,133 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(OrdersProducts)
     private readonly ordersProductsRepository: Repository<OrdersProducts>,
+
+    @InjectRepository(ProductVariant)
+    private readonly productVariantRepository: Repository<ProductVariant>,
     @InjectStripe() private readonly stripeClient: Stripe,
     private readonly productService: ProductService,
     private readonly userService: UserService,
   ) {}
 
-  async findAll() {
-    const orders = await this.orderRepository.find();
+  async createOrder(userId: number, createOrderDto: CreateOrderDto) {
+    const { adress, date, products } = createOrderDto;
+
+    // Validate products and stock using productVariantRepository
+    const validatedProducts = await Promise.all(
+      products.map(async (product: ProductDto) => {
+        // Find product variant using productVariantRepository
+        const existingVariant = await this.productVariantRepository.findOne({
+          where: { id: product.id },
+        });
+
+        if (!existingVariant) {
+          throw new NotFoundException(
+            `Product variant with ID ${product.id} not found`,
+          );
+        }
+
+        if (existingVariant.stock < product.quantity) {
+          throw new BadRequestException(
+            `Insufficient stock for product variant: ${existingVariant.size} / ${existingVariant.color}`,
+          );
+        }
+
+        // Deduct stock and update the product variant
+        existingVariant.stock -= product.quantity;
+        await this.productVariantRepository.save(existingVariant);
+
+        return {
+          productVariant: existingVariant,
+          quantity: product.quantity,
+          price: existingVariant.price,
+        };
+      }),
+    );
+
+    const savedOrder = await this.orderRepository.save({
+      price: 0,
+      adress,
+      date,
+      status: 'CREATED',
+      userId: userId,
+    });
+    console.log(savedOrder);
+    // Create relationships between order and product variants
+    for (const item of validatedProducts) {
+      await this.ordersProductsRepository.save({
+        order: savedOrder,
+        productVariant: item.productVariant,
+        quantity: item.quantity,
+        price: item.price,
+      });
+    }
+
+    return savedOrder;
+  }
+
+  /**
+   * Get all orders of a specific user.
+   * @param userId User ID
+   */
+  async getUserOrders(userId: number) {
+    const orders = await this.orderRepository.find({
+      where: { userId },
+      relations: [
+        'OrdersProducts',
+        'OrdersProducts.productVariant',
+        'OrdersProducts.productVariant.product',
+      ],
+    });
+
+    if (orders.length === 0) {
+      throw new NotFoundException('No orders found for this user.');
+    }
 
     return orders;
   }
 
-  async findAllByUserId(id: number) {
-    const orders = await this.orderRepository.find({
-      where: {
-        user: id,
-      },
+  /**
+   * Update the status of an order (Admin only).
+   * @param orderId Order ID
+   * @param status New status
+   */
+  async updateOrderStatus(orderId: number, status: string) {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
     });
 
-    if (!orders) {
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found.`);
+    }
+    console.log(status)
+    order.status = status;
+    return await this.orderRepository.save(order);
+  }
+
+  async findAll() {
+    const orders = await this.orderRepository.find();
+    return orders;
+  }
+
+  async findAllByUserId(userId: number) {
+    const orders = await this.orderRepository.find({
+      where: { user: userId },
+    });
+
+    if (!orders.length) {
       throw new NotFoundException(`This user doesn't have any orders`);
     }
 
     return orders;
   }
 
-  async findOne(id: number) {
-    const order = await this.orderRepository.findOne(id);
+  async findOne(orderId: number) {
+    const order = await this.orderRepository.findOne(orderId);
 
     if (!order) {
-      throw new NotFoundException(`Order under this id doesn't exist`);
+      throw new NotFoundException(`Order with ID ${orderId} doesn't exist`);
     }
 
     return order;
-  }
-
-  async findOneByStripeSessionId(stripeId: string) {
-    const order = await this.orderRepository.findOne({ stripeId });
-
-    if (!order) {
-      throw new NotFoundException(
-        `Order under this stripe session id doesn't exist`,
-      );
-    }
-
-    return order;
-  }
-
-  async create(userId: number, createOrderDto: CreateOrderDto) {
-    const status = Status.NEEDS_CONFIRMATION;
-    const productsDto = createOrderDto.products;
-
-    const userExists = await this.userService.findOne(userId);
-
-    const productsIds = productsDto.map((current) => current.id);
-    const productsMap = this.createProductQuantityMap(productsDto);
-
-    const products = await this.productService.findManyByIds(productsIds);
-    const price = await this.getTotalPrice(products, productsMap);
-
-    const paymentItems = this.createPaymentItems(products, productsMap);
-    const session = await this.createPaymentSession(paymentItems);
-
-    const order = await this.orderRepository.create({
-      ...createOrderDto,
-      userId,
-      status,
-      // price,
-      stripeId: session.id,
-    });
-
-    const savedOrder = await this.orderRepository.save(order);
-
-    // const ordersProducts = products.map((product) => ({
-    //   orderId: savedOrder.id,
-    //   productId: product.id,
-    //   quantity: productsMap.get(product.id),
-    // }));
-
-    // await this.ordersProductsRepository.save(ordersProducts);
-
-    return session.url;
-  }
-
-  async onPaymentSuccess(stripeId: string) {
-    const order = await this.findOneByStripeSessionId(stripeId);
-
-    const orderStatusObject = { status: Status.IN_PROGRESS };
-
-    return this.update(order.id, orderStatusObject);
-  }
-
-  async update(id: number, updateOrderDto: UpdateOrderDto) {
-    const order = await this.orderRepository.preload({
-      id,
-      ...updateOrderDto,
-    });
-
-    if (!order) {
-      throw new NotFoundException(`There is no order under id ${id}`);
-    }
-
-    return this.orderRepository.save(order);
-  }
-
-  async remove(id: number) {
-    const order = await this.findOne(id);
-
-    return this.orderRepository.remove(order);
-  }
-
-  private async getTotalPrice(
-    products: Array<Product>,
-    productsMap: Map<number, number>,
-  ) {
-    // const price = products.reduce(
-    //   (sum, current) => sum + +current.price * productsMap.get(current.id),
-    //   0,
-    // );
-
-    // return price;
-  }
-
-  private async createPaymentSession(items) {
-    const session = await this.stripeClient.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      line_items: items,
-      success_url: process.env.PAYMENT_SUCCESS_URL,
-      cancel_url: process.env.PAYMENT_CANCEL_URL,
-    });
-
-    const sessionData = { url: session.url, id: session.id };
-
-    return sessionData;
-  }
-
-  private createProductQuantityMap(productsDto: Array<ProductDto>) {
-    const productsMap = new Map<number, number>(); //productId -> quantity
-
-    for (const product of productsDto) {
-      const { id, quantity } = product;
-
-      productsMap.set(id, quantity);
-    }
-
-    return productsMap;
-  }
-
-  private createPaymentItems(
-    products: Array<Product>,
-    productsMap: Map<number, number>,
-  ) {
-    // const paymentItems = products.map((product) => ({
-    //   price_data: {
-    //     currency: 'usd',
-    //     product_data: {
-    //       name: product.name,
-    //     },
-    //     unit_amount: product.price * 100,
-    //   },
-    //   quantity: productsMap.get(product.id),
-    // }));
-
-    // return paymentItems;
   }
 }

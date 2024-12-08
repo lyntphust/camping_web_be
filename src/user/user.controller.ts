@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   Req,
   Res,
@@ -41,4 +43,14 @@ export class UserController {
     );
     console.log(user);
   }
+
+  @Delete('/cart/:productId')
+  async removeProductCart(
+    @GetUser() user: AuthPayload,
+    @Param('productId') productId: number,
+  ) {
+    return await this.userService.removeProductFromCart(productId, user.id);
+  }
+
+  
 }

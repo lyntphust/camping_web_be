@@ -38,10 +38,11 @@ import { ProductVariant } from './product/enities/product-variant.entity';
         Order,
         OrdersProducts,
         Permission,
-        ProductVariant
+        ProductVariant,
       ],
       autoLoadEntities: true,
       synchronize: false,
+      logging: true,
     }),
     StripeModule.forRoot({
       apiKey: process.env.STRIPE_API_KEY,
