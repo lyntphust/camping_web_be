@@ -16,7 +16,7 @@ export class Order {
   id: number;
 
   @Column({ length: 50 })
-  adress: string;
+  address: string;
 
   @Column('decimal', {
     precision: 8,

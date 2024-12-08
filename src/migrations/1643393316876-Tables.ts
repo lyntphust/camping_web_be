@@ -53,7 +53,7 @@ export class Tables1643393316876 implements MigrationInterface {
     await queryRunner.query(
       `CREATE TABLE "order" (
         "id" SERIAL PRIMARY KEY, 
-        "adress" character varying(50) NOT NULL, 
+        "address" character varying(50) NOT NULL, 
         "price" numeric(8,2) NOT NULL, 
         "date" character varying(25) NOT NULL, 
         "status" character varying(50) NOT NULL, 

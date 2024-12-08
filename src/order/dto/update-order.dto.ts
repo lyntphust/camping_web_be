@@ -7,7 +7,7 @@ export class UpdateOrderDto {
   @IsOptional()
   @IsString()
   @ApiProperty()
-  readonly adress?: string;
+  readonly address?: string;
 
   @IsOptional()
   @IsString()

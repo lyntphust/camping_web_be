@@ -32,7 +32,7 @@ export class OrderService {
   ) {}
 
   async createOrder(userId: number, createOrderDto: CreateOrderDto) {
-    const { adress, date, products } = createOrderDto;
+    const { address, date, products } = createOrderDto;
 
     // Validate products and stock using productVariantRepository
     const validatedProducts = await Promise.all(
@@ -68,7 +68,7 @@ export class OrderService {
 
     const savedOrder = await this.orderRepository.save({
       price: 0,
-      adress,
+      address,
       date,
       status: 'CREATED',
       userId: userId,
@@ -121,7 +121,7 @@ export class OrderService {
     if (!order) {
       throw new NotFoundException(`Order with ID ${orderId} not found.`);
     }
-    console.log(status)
+    console.log(status);
     order.status = status;
     return await this.orderRepository.save(order);
   }

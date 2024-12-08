@@ -31,7 +31,7 @@ export class CreateOrderDto {
     example: '123 Main Street, Springfield',
   })
   @IsString()
-  readonly adress: string;
+  readonly address: string;
 
   @ApiProperty({
     description: 'Expected delivery date for the order',
