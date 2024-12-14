@@ -21,18 +21,21 @@ import { PermissionGuard } from 'src/role/guards/permission.guard';
 import { ProductService } from './product.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { Public } from 'src/decorator/public.decorator';
 
 @Controller('product')
 @ApiBearerAuth()
 export class ProductController {
-  constructor(private readonly productService: ProductService) { }
+  constructor(private readonly productService: ProductService) {}
 
   @Get()
+  @Public()
   async findAll() {
     return this.productService.findAll();
   }
 
   @Get('category/:category')
+  @Public()
   async findAllByCategory(@Param('category') category: string) {
     return this.productService.findAllByCategory(category);
   }
@@ -79,7 +82,8 @@ export class ProductController {
       },
     },
   })
-  async create(@Body() createProductDto: CreateProductDto,
+  async create(
+    @Body() createProductDto: CreateProductDto,
     @UploadedFiles() file: Express.Multer.File,
   ) {
     return this.productService.create(createProductDto, file);
