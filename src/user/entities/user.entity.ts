@@ -10,6 +10,7 @@ import {
 import { Order } from '../../order/entities/order.entity';
 import { Role } from '../../role/entities/role.entity';
 import { ProductCart } from 'src/product/enities/product-cart.entity';
+import { Blog } from './blog.entity';
 
 @Entity()
 export class User {
@@ -46,4 +47,8 @@ export class User {
     (productCarts: ProductCart) => productCarts.user,
   )
   productCarts: ProductCart[];
+
+
+  @OneToMany(() => Blog, (blog) => blog.user)
+  blogs: Blog[];
 }

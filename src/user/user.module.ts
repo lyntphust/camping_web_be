@@ -10,14 +10,17 @@ import { S3CoreModule } from 'src/s3/src/s3.module';
 import { UserService } from './user.service';
 import { ProductCart } from 'src/product/enities/product-cart.entity';
 import { UserController } from './user.controller';
+import { BlogController } from './blog.controller';
+import { BlogService } from './blog.service';
+import { Blog } from './entities/blog.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Permission, ProductCart]),
+    TypeOrmModule.forFeature([User, Permission, ProductCart,Blog]),
     RoleModule,
     S3CoreModule
   ],
-  controllers: [UserController],
-  providers: [UserService],
+  controllers: [UserController,BlogController],
+  providers: [UserService,BlogService],
   exports: [UserService],
 })
 export class UserModule {}
