@@ -24,6 +24,43 @@ import { AddProductToCartDto } from './dto/add-product.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+// Yêu thích 1 sản phẩm
+@Post('/favorite/:productId')
+async favoriteProduct(
+  @GetUser() user: AuthPayload,
+  @Param('productId') productId: number,
+) {
+  try {
+    return await this.userService.addFavoriteProduct(user.id, productId);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
+
+// Xem danh sách sản phẩm yêu thích
+@Get('/favorite')
+async getFavoriteProducts(@GetUser() user: AuthPayload) {
+  try {
+    return await this.userService.getFavoriteProducts(user.id);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
+
+// Xóa sản phẩm khỏi danh sách yêu thích
+@Delete('/favorite/:productId')
+async removeFavoriteProduct(
+  @GetUser() user: AuthPayload,
+  @Param('productId') productId: number,
+) {
+  try {
+    return await this.userService.removeFavoriteProduct(user.id, productId);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
+
+
   @Get('/cart')
   async getProductCart(@GetUser() user: AuthPayload) {
     return await this.userService.getProductList(user.id);

@@ -11,6 +11,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ProductCart } from 'src/product/enities/product-cart.entity';
 import { S3CoreService } from 'src/s3/src';
 import { RoleService } from '../role/role.service';
+import { FavoriteProduct } from 'src/product/enities/favorite-product.entity';
+import { Product } from 'src/product/enities/product.entity';
 
 @Injectable()
 export class UserService {
@@ -18,6 +20,10 @@ export class UserService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(ProductCart)
     private readonly productCartRepository: Repository<ProductCart>,
+    @InjectRepository(FavoriteProduct)
+    private readonly favoriteProductRepository: Repository<FavoriteProduct>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
     private readonly roleService: RoleService,
     private readonly s3Service: S3CoreService,
   ) {}
@@ -29,6 +35,64 @@ export class UserService {
 
     return users;
   }
+
+
+
+ // Yêu thích 1 sản phẩm
+ async addFavoriteProduct(userId: number, productId: number) {
+  const product = await this.productRepository.findOne(productId);
+  if (!product) {
+    throw new NotFoundException(`Product with ID ${productId} not found.`);
+  }
+
+  const existingFavorite = await this.favoriteProductRepository.findOne({
+    where: { user: { id: userId }, product: { id: productId } },
+  });
+
+  if (existingFavorite) {
+    throw new Error(`Product with ID ${productId} is already in your favorites.`);
+  }
+
+  const favorite = this.favoriteProductRepository.create({
+    user: { id: userId },
+    product: { id: productId },
+  });
+
+  return await this.favoriteProductRepository.save(favorite);
+}
+
+// Xem danh sách sản phẩm yêu thích
+async getFavoriteProducts(userId: number) {
+  const favorites = await this.favoriteProductRepository.find({
+    where: { user: { id: userId } },
+    relations: ['product'],
+  });
+
+  return favorites.map((fav) => ({
+    productId: fav.product.id,
+    name: fav.product.name,
+    price: fav.product.price,
+    photo: fav.product.photo,
+  }));
+}
+
+// Xóa sản phẩm khỏi danh sách yêu thích
+async removeFavoriteProduct(userId: number, productId: number) {
+  const favorite = await this.favoriteProductRepository.findOne({
+    where: { user: { id: userId }, product: { id: productId } },
+  });
+
+  if (!favorite) {
+    throw new NotFoundException(
+      `Product with ID ${productId} is not in your favorites.`,
+    );
+  }
+
+  await this.favoriteProductRepository.remove(favorite);
+
+  return { message: `Product with ID ${productId} has been removed from your favorites.` };
+}
+
 
   async findOne(id: number) {
     const user = await this.userRepository.findOne(id, {

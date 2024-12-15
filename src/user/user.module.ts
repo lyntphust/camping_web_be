@@ -13,9 +13,11 @@ import { UserController } from './user.controller';
 import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
 import { Blog } from './entities/blog.entity';
+import { Product } from 'src/product/enities/product.entity';
+import { FavoriteProduct } from 'src/product/enities/favorite-product.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Permission, ProductCart,Blog]),
+    TypeOrmModule.forFeature([User, Permission, ProductCart,Blog,Product,FavoriteProduct]),
     RoleModule,
     S3CoreModule
   ],
