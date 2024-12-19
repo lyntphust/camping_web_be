@@ -20,6 +20,6 @@ export class ProductCart {
   user: User;
 
   @ManyToOne(() => ProductVariant, { eager: false })
-  @JoinColumn({ name: 'product_variant_id' }) // Ánh xạ cột với quan hệ
-  productVariant: ProductVariant; // Liên kết với ProductVariant
+  @JoinColumn({ name: 'product_variant_id' }) 
+  productVariant: ProductVariant; 
 }

@@ -29,6 +29,9 @@ export class ProductVariant {
   @Column()
   product_id: number;
 
+  @Column({ default: 0 }) // Thêm cột `sold` với giá trị mặc định là 0
+  sold: number;
+
   @ManyToOne(() => Product, (product) => product.variants, {
     onDelete: 'CASCADE',
   })

@@ -56,6 +56,7 @@ export class OrderService {
 
         // Deduct stock and update the product variant
         existingVariant.stock -= product.quantity;
+        existingVariant.sold += product.quantity;
         await this.productVariantRepository.save(existingVariant);
 
         return {
