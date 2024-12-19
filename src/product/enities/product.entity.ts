@@ -11,14 +11,11 @@ export class Product {
   @Column({ length: 50 })
   name: string;
 
-  @Column({ length: 50 })
-  color: string;
+
 
   @Column()
   discount: number;
 
-  @Column({ length: 10 })
-  weight: string;
 
   @Column()
   price: number;
@@ -28,9 +25,6 @@ export class Product {
 
   @Column({ length: 255 })
   description: string;
-
-  @Column()
-  size: string;
 
   @Column({ length: 50 })
   category: string;

@@ -12,16 +12,19 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { S3CoreService } from 'src/s3/src';
 import { v4 as uuidv4 } from 'uuid';
+import { ProductVariant } from './enities/product-variant.entity';
 @Injectable()
 export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly s3Service: S3CoreService,
+    @InjectRepository(ProductVariant)
+    private readonly productVariantRepository: Repository<ProductVariant>,
   ) { }
 
   async findAll() {
-    const products = await this.productRepository.find();
+    const products = await this.productRepository.find({relations:['variants']});
     for (let i = 0; i < products.length; i++) {
       const link = await this.s3Service.getLinkFromS3(products[i].photo);
       products[i]['image'] = link;
@@ -58,19 +61,39 @@ export class ProductService {
   }
 
   async create(createProductDto: CreateProductDto, file: Express.Multer.File) {
-    //validate file
+    console.log(createProductDto.variants)
+    // Validate file
     const isValidTypeAndSize = validateTypeImg(file[0].mimetype, file[0].size);
-    if (!isValidTypeAndSize)
+    if (!isValidTypeAndSize) {
       throw new BadRequestException('VALIDATE_FILE_FAILED');
+    }
 
+    // Upload file to S3
     const prefix = 'product-image';
     const key = `${prefix}/${uuidv4()}/${file[0].originalname}`;
     await this.s3Service.uploadFileWithStream(file[0].buffer, key);
-    const product = await this.productRepository.create(createProductDto);
+
+    // Create and save product
+    const { variants, ...productData } = createProductDto;
+    const product = this.productRepository.create(productData);
     product.photo = key;
-    console.log(createProductDto)
-    product.weight = '1';
-    return this.productRepository.save(product);
+    const savedProduct = await this.productRepository.save(product);
+
+    // Create and save product variants
+    if (variants && variants.length > 0) {
+      const productVariants = variants.map(variant =>
+        this.productVariantRepository.create({
+          ...variant,
+          price:savedProduct.price,
+          stock:variant.quantity,
+          product: savedProduct,
+        }),
+      );
+
+      await this.productVariantRepository.save(productVariants);
+    }
+
+    return { product: savedProduct };
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {

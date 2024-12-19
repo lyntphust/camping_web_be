@@ -11,10 +11,12 @@ import { ProductController } from './product.controller';
 
 import { ProductService } from './product.service';
 import { S3CoreModule } from 'src/s3/src/s3.module';
+import { ProductVariant } from './enities/product-variant.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Product]),
+    TypeOrmModule.forFeature([Product,ProductVariant
+    ]),
     UserModule,
     AuthModule,
     RoleModule,
