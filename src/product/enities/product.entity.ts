@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { ProductVariant } from './product-variant.entity';
 import { OrdersProducts } from 'src/order/entities/orders-products.entity';
+import { FavoriteProduct } from './favorite-product.entity';
 
 @Entity()
 export class Product {
@@ -36,5 +37,9 @@ export class Product {
 
   @OneToMany(() => ProductVariant, (variant) => variant.product)
   variants: ProductVariant[]; // Liên kết với bảng ProductVariant
+
+  @OneToMany(() => FavoriteProduct, (favorite) => favorite.product)
+  favoriteProducts: FavoriteProduct[];
+  
 
 }
