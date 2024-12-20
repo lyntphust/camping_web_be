@@ -63,7 +63,7 @@ export class TokenService {
 
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: '30m',
+      expiresIn: '1d',
     });
 
     console.log(accessToken);
