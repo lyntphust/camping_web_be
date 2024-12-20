@@ -169,7 +169,7 @@ async removeFavoriteProduct(userId: number, productId: number) {
       existingCartItem.quantity += quantity;
       await this.productCartRepository.save(existingCartItem);
     } else {
-      await this.productCartRepository.save({ productId, userId, quantity });
+      await this.productCartRepository.save({ productVariantId: productId, userId, quantity });
     }
   }
 

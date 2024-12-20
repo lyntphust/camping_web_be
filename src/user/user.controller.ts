@@ -25,18 +25,6 @@ import { Public } from 'src/decorator/public.decorator';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-
-// Lấy thông tin của 1 user dựa vào userId
-@Public()
-@Get('/:userId')
-async getUserById(@Param('userId') userId: number) {
-  try {
-    return await this.userService.getUserById(userId);
-  } catch (error) {
-    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-  }
-}
-
 // Yêu thích 1 sản phẩm
 @Post('/favorite/:productId')
 async favoriteProduct(
