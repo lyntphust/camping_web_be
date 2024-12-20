@@ -28,6 +28,16 @@ export class UserService {
     private readonly s3Service: S3CoreService,
   ) {}
 
+  async getUserById(userId: number) {
+    const user = await this.userRepository.findOne(userId);
+    delete user.password;
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found.`);
+    }
+
+    return user;
+  }
+
   async findAll() {
     const users = await this.userRepository.find({
       relations: ['role'],

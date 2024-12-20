@@ -8,7 +8,7 @@ export class AddSoldToProductVariant1734621704804 implements MigrationInterface 
             name: 'sold',
             type: 'int',
             isNullable: false,
-            default: 0, // Giá trị mặc định là 0
+            default: 0, 
           }),
         );
       }

@@ -25,7 +25,7 @@ export class Order {
   price: number;
 
   @Column({ length: 25 })
-  date: string;
+  phone: string;
 
   @Column({ length: 50 })
   status: string;

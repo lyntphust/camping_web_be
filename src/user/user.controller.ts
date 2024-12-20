@@ -17,12 +17,25 @@ import { UserService } from './user.service';
 import { AuthPayload, GetUser } from 'src/decorator/getUser.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AddProductToCartDto } from './dto/add-product.dto';
+import { Public } from 'src/decorator/public.decorator';
 
 @Controller('user')
 @ApiBearerAuth()
 @ApiTags('User')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+
+// Lấy thông tin của 1 user dựa vào userId
+@Public()
+@Get('/:userId')
+async getUserById(@Param('userId') userId: number) {
+  try {
+    return await this.userService.getUserById(userId);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
 
 // Yêu thích 1 sản phẩm
 @Post('/favorite/:productId')

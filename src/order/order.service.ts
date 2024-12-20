@@ -32,7 +32,7 @@ export class OrderService {
   ) {}
 
   async createOrder(userId: number, createOrderDto: CreateOrderDto) {
-    const { address, date, products } = createOrderDto;
+    const { address, phone, products } = createOrderDto;
 
     // Validate products and stock using productVariantRepository
     const validatedProducts = await Promise.all(
@@ -70,7 +70,7 @@ export class OrderService {
     const savedOrder = await this.orderRepository.save({
       price: 0,
       address,
-      date,
+      phone,
       status: 'CREATED',
       userId: userId,
     });

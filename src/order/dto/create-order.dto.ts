@@ -33,12 +33,9 @@ export class CreateOrderDto {
   @IsString()
   readonly address: string;
 
-  @ApiProperty({
-    description: 'Expected delivery date for the order',
-    example: '2024-12-15',
-  })
+  @ApiProperty()
   @IsString()
-  readonly date: string;
+  readonly phone: string;
 
   @ApiProperty({
     description: 'List of product variants with their quantities',
