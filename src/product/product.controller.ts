@@ -87,12 +87,11 @@ export class ProductController {
         variants: parsedVariants, // Attach parsed variants
       };
 
-      return this.productService.create(createProductDto,files);
+      return this.productService.create(createProductDto, files);
     } catch (error) {
       throw new BadRequestException('Invalid JSON format in variants field');
     }
   }
-
 
   // @Permission('CRUD_PRODUCT_ALL')
   // @UseGuards(PermissionGuard)

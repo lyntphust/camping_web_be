@@ -1,9 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsNumber, IsNumberString, IsString, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsNumberString,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 
+export class ProductVariantDto {
+  id: number;
 
-class ProductVariantDto {
   @IsString()
   @IsNotEmpty()
   @ApiProperty({
@@ -65,11 +73,14 @@ export class CreateProductDto {
   })
   readonly category: string;
 
+  // Array of ProductVariantDto
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ProductVariantDto)
   @ApiProperty({
     description: 'Variants of the product',
     type: [ProductVariantDto],
+    isArray: true,
   })
-  @Type(() => ProductVariantDto)
   variants: ProductVariantDto[];
 }
-

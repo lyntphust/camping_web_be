@@ -8,10 +8,10 @@ import { Repository } from 'typeorm';
 
 import { Product } from './enities/product.entity';
 
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
 import { S3CoreService } from 'src/s3/src';
 import { v4 as uuidv4 } from 'uuid';
+import { CreateProductDto, ProductVariantDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductVariant } from './enities/product-variant.entity';
 @Injectable()
 export class ProductService {
@@ -21,10 +21,12 @@ export class ProductService {
     private readonly s3Service: S3CoreService,
     @InjectRepository(ProductVariant)
     private readonly productVariantRepository: Repository<ProductVariant>,
-  ) { }
+  ) {}
 
   async findAll() {
-    const products = await this.productRepository.find({relations:['variants']});
+    const products = await this.productRepository.find({
+      relations: ['variants'],
+    });
     for (let i = 0; i < products.length; i++) {
       const link = await this.s3Service.getLinkFromS3(products[i].photo);
       products[i]['image'] = link;
@@ -61,7 +63,7 @@ export class ProductService {
   }
 
   async create(createProductDto: CreateProductDto, file: Express.Multer.File) {
-    console.log(createProductDto.variants)
+    console.log(createProductDto.variants);
     // Validate file
     const isValidTypeAndSize = validateTypeImg(file[0].mimetype, file[0].size);
     if (!isValidTypeAndSize) {
@@ -81,11 +83,11 @@ export class ProductService {
 
     // Create and save product variants
     if (variants && variants.length > 0) {
-      const productVariants = variants.map(variant =>
+      const productVariants = variants.map((variant) =>
         this.productVariantRepository.create({
           ...variant,
-          price:savedProduct.price,
-          stock:variant.quantity,
+          price: savedProduct.price,
+          stock: variant.quantity,
           product: savedProduct,
         }),
       );
@@ -94,6 +96,54 @@ export class ProductService {
     }
 
     return { product: savedProduct };
+  }
+
+  private async getVariantsUpdateData(
+    variants: ProductVariantDto[],
+    product: Product,
+  ) {
+    const currentVariants = await this.productVariantRepository.find({
+      where: { product },
+    });
+
+    let newVariants = [];
+    let updatedVariants = [];
+    let deletedVariants: ProductVariant[] = [];
+
+    for (let i = 0; i < variants.length; i++) {
+      const variant = variants[i];
+      const currentVariant = currentVariants.find(
+        (v) => v.color === variant.color && v.size === variant.size,
+      );
+
+      const { quantity, ...variantData } = variant;
+
+      if (!currentVariant) {
+        newVariants.push({
+          ...variantData,
+          price: product.price,
+          stock: quantity,
+          product,
+          sold: 0,
+        });
+      } else {
+        updatedVariants.push({
+          id: currentVariant.id,
+          ...variantData,
+          price: product.price,
+          stock: quantity,
+        });
+      }
+    }
+
+    deletedVariants = currentVariants.filter(
+      (v) =>
+        !variants.find(
+          (variant) => v.color === variant.color && v.size === variant.size,
+        ),
+    );
+
+    return { newVariants, updatedVariants, deletedVariants };
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
@@ -106,7 +156,49 @@ export class ProductService {
       throw new NotFoundException(`There is no product under id ${id}`);
     }
 
-    return this.productRepository.save(product);
+    const { variants, ...productData } = updateProductDto;
+
+    productData.category = product.category;
+    productData.photo = product.photo;
+
+    const savedProduct = await this.productRepository.save({
+      ...productData,
+      category: product.category,
+      photo: product.photo,
+      id,
+    });
+
+    const { newVariants, updatedVariants, deletedVariants } =
+      await this.getVariantsUpdateData(variants, savedProduct);
+
+    // Save new variants
+    if (newVariants.length > 0) {
+      const productVariants = newVariants.map((variant) =>
+        this.productVariantRepository.create(variant),
+      );
+
+      await this.productVariantRepository.save(productVariants.flat());
+    }
+
+    // Update existing variants
+    if (updatedVariants.length > 0) {
+      await Promise.all(
+        updatedVariants.map((variant) => {
+          this.productVariantRepository.update(variant.id, variant);
+        }),
+      );
+    }
+
+    // Remove deleted variants
+    if (deletedVariants.length > 0) {
+      await Promise.all(
+        deletedVariants.map((variant) =>
+          this.productVariantRepository.remove(variant),
+        ),
+      );
+    }
+
+    return { product: savedProduct };
   }
 
   async remove(id: number) {
@@ -117,7 +209,6 @@ export class ProductService {
 }
 
 const validateTypeImg = (type: string, size: number): boolean => {
-
   if (
     (type === process.env.UPLOAD_TYPE_PNG ||
       type === process.env.UPLOAD_TYPE_JPG) &&

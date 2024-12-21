@@ -25,6 +25,7 @@ $ npm install
 ```
 
 ## Example of .env file
+
 ```bash
 DB_NAME=postgres
 DB_HOST=localhost
@@ -44,6 +45,9 @@ PAYMENT_CANCEL_URL=http://localhost:3000/order/cancel
 # start docker containers
 $ docker-compose up
 
+# build the project
+$ npm run build
+
 # migrations for default data
 $ npx typeorm migration:run
 
@@ -53,4 +57,3 @@ $ npm run start
 # watch mode
 $ npm run start:dev
 ```
-
