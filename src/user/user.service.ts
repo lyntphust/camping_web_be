@@ -190,6 +190,7 @@ async removeFavoriteProduct(userId: number, productId: number) {
         'product.name',
         'product.description',
         'product.photo',
+        'product.discount',
       ])
       .getMany();
 
@@ -209,7 +210,7 @@ async removeFavoriteProduct(userId: number, productId: number) {
 
     return {
       total: productCarts.reduce(
-        (acc, curr) => acc + curr.productVariant.price * curr.quantity,
+        (acc, curr) => acc + curr.productVariant.price * (100 - curr.productVariant.product.discount) / 100 * curr.quantity,
         0,
       ),
       items: productCarts,
