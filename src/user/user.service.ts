@@ -8,11 +8,12 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
+import { FavoriteProduct } from 'src/product/enities/favorite-product.entity';
 import { ProductCart } from 'src/product/enities/product-cart.entity';
+import { ProductVariant } from 'src/product/enities/product-variant.entity';
+import { Product } from 'src/product/enities/product.entity';
 import { S3CoreService } from 'src/s3/src';
 import { RoleService } from '../role/role.service';
-import { FavoriteProduct } from 'src/product/enities/favorite-product.entity';
-import { Product } from 'src/product/enities/product.entity';
 
 @Injectable()
 export class UserService {
@@ -20,6 +21,8 @@ export class UserService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(ProductCart)
     private readonly productCartRepository: Repository<ProductCart>,
+    @InjectRepository(ProductVariant)
+    private readonly productVariantRepository: Repository<ProductVariant>,
     @InjectRepository(FavoriteProduct)
     private readonly favoriteProductRepository: Repository<FavoriteProduct>,
     @InjectRepository(Product)
@@ -163,13 +166,39 @@ async removeFavoriteProduct(userId: number, productId: number) {
   async addProductToCart(productId: number, userId: number, quantity: number) {
     const existingCartItem = await this.productCartRepository.findOne({
       where: { productVariantId: productId, userId },
+      relations: ['productVariant', 'productVariant.product'],
     });
 
     if (existingCartItem) {
-      existingCartItem.quantity += quantity;
+      const newQuantity = existingCartItem.quantity += quantity;
+
+      const productName = existingCartItem.productVariant.product.name;
+
+      if (newQuantity > existingCartItem.productVariant.stock) {
+        return {
+          error: `Không đủ hàng cho sản phẩm ${productName}. Số lượng bạn muốn mua: ${existingCartItem.quantity}. Số lượng còn lại: ${existingCartItem.productVariant.stock}.`,
+        }
+      }
+
       await this.productCartRepository.save(existingCartItem);
     } else {
-      await this.productCartRepository.save({ productVariantId: productId, userId, quantity });
+      const productVariant = await this.productVariantRepository.findOne(productId, {
+        relations: ['product'],
+      });
+
+      const productName = productVariant.product.name;
+
+      if (quantity > productVariant.stock) {
+        return {
+          error: `Không đủ hàng cho sản phẩm ${productName}. Số lượng còn lại: ${productVariant.stock}.`,
+        }
+      }
+
+      await this.productCartRepository.save({
+        productVariantId: productId,
+        userId,
+        quantity,
+      });
     }
   }
 
@@ -210,7 +239,12 @@ async removeFavoriteProduct(userId: number, productId: number) {
 
     return {
       total: productCarts.reduce(
-        (acc, curr) => acc + curr.productVariant.price * (100 - curr.productVariant.product.discount) / 100 * curr.quantity,
+        (acc, curr) =>
+          acc +
+          ((curr.productVariant.price *
+            (100 - curr.productVariant.product.discount)) /
+            100) *
+            curr.quantity,
         0,
       ),
       items: productCarts,
