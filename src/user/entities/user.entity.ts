@@ -12,6 +12,7 @@ import { Role } from '../../role/entities/role.entity';
 import { ProductCart } from 'src/product/enities/product-cart.entity';
 import { Blog } from './blog.entity';
 import { FavoriteProduct } from 'src/product/enities/favorite-product.entity';
+import { ChatbotHistory } from 'src/chatbot/entities/chatbot-history.entity';
 
 @Entity()
 export class User {
@@ -55,4 +56,7 @@ export class User {
 
   @OneToMany(() => FavoriteProduct, (favorite) => favorite.user)
 favoriteProducts: FavoriteProduct[];
+
+  @OneToMany(() => ChatbotHistory, (chatHistory) => chatHistory.user)
+  chatbotHistories: ChatbotHistory[];
 }

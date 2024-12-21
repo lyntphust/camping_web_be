@@ -1,24 +1,26 @@
-import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { UserModule } from './user/user.module';
-import { OrderModule } from './order/order.module';
-import { ProductModule } from './product/product.module';
-import { RoleModule } from './role/role.module';
-import { AuthModule } from './auth/auth.module';
-import { TokenModule } from './token/token.module';
+import { APP_GUARD } from '@nestjs/core';
 import { StripeModule } from 'nestjs-stripe';
-import { ProductCart } from './product/enities/product-cart.entity';
-import { User } from './user/entities/user.entity';
-import { Product } from './product/enities/product.entity';
-import { Role } from './role/entities/role.entity';
+import { AuthGuard } from './auth/auth.guard';
+import { AuthModule } from './auth/auth.module';
+import { ChatbotModule } from './chatbot/chatbot.module';
+import { ChatbotHistory } from './chatbot/entities/chatbot-history.entity';
 import { Order } from './order/entities/order.entity';
 import { OrdersProducts } from './order/entities/orders-products.entity';
-import { Permission } from './user/entities/permission.entity';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth/auth.guard';
+import { OrderModule } from './order/order.module';
+import { ProductCart } from './product/enities/product-cart.entity';
 import { ProductVariant } from './product/enities/product-variant.entity';
+import { Product } from './product/enities/product.entity';
+import { ProductModule } from './product/product.module';
+import { Role } from './role/entities/role.entity';
+import { RoleModule } from './role/role.module';
+import { TokenModule } from './token/token.module';
+import { Permission } from './user/entities/permission.entity';
+import { User } from './user/entities/user.entity';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -39,6 +41,7 @@ import { ProductVariant } from './product/enities/product-variant.entity';
         OrdersProducts,
         Permission,
         ProductVariant,
+        ChatbotHistory,
       ],
       autoLoadEntities: true,
       synchronize: false,
@@ -54,6 +57,7 @@ import { ProductVariant } from './product/enities/product-variant.entity';
     RoleModule,
     AuthModule,
     TokenModule,
+    ChatbotModule,
   ],
   providers: [
     {
