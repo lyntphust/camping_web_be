@@ -25,7 +25,7 @@ export class AuthService {
 
   async login(userDto: LoginUserDto) {
     const { id } = await this.validateUser(userDto);
-    const userInfo = await this.userRepository.findOne({ id: id });
+    const userInfo = await this.userRepository.findOne({ where:{id: id},relations:['role']});
     const token = await this.tokenService.generateTokens(id);
     console.log(`token: ${token}`);
     return { accessToken: token, user: userInfo };
