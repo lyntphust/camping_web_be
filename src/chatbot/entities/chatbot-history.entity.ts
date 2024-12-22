@@ -2,9 +2,8 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 
 export enum ChatbotHistoryRole {
-  SYSTEM = 'system',
+  MODEL = 'model',
   USER = 'user',
-  ASSISTANT = 'assistant',
 }
 
 @Entity()
@@ -23,7 +22,7 @@ export class ChatbotHistory {
   @Column({
     type: 'enum',
     enum: ChatbotHistoryRole,
-    default: ChatbotHistoryRole.SYSTEM,
+    default: ChatbotHistoryRole.MODEL,
   })
   role: ChatbotHistoryRole;
 
