@@ -70,11 +70,10 @@ async removeFavoriteProduct(
   }
 
   @Public()
-  @Get('/all/:pageNumber/:pageSize')
-  async getAllUser(@Param('pageNumber') pageNumber: number,
-  @Param('pageSize') pageSize: number) {
+  @Get('/all')
+  async getAllUser() {
     try {
-      return await this.userService.getAllUser(pageNumber,pageSize);
+      return await this.userService.getAllUser();
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
