@@ -38,6 +38,7 @@ async favoriteProduct(
   }
 }
 
+
 // Xem danh sách sản phẩm yêu thích
 @Get('/favorite')
 async getFavoriteProducts(@GetUser() user: AuthPayload) {
@@ -68,6 +69,27 @@ async removeFavoriteProduct(
     console.log(user);
   }
 
+  @Public()
+  @Get('/all/:pageNumber/:pageSize')
+  async getAllUser(@Param('pageNumber') pageNumber: number,
+  @Param('pageSize') pageSize: number) {
+    try {
+      return await this.userService.getAllUser(pageNumber,pageSize);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Public()
+  @Get('/:userId')
+async getUserById(@Param('userId') userId: number) {
+  try {
+    return await this.userService.getUserById(userId);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
+
   @Post('/add-cart')
   async addProductCart(
     @GetUser() user: AuthPayload,
@@ -90,5 +112,13 @@ async removeFavoriteProduct(
     return await this.userService.removeProductFromCart(productId, user.id);
   }
 
-  
+  @Public()
+  @Delete('/:userId')
+  async removeUser(
+    @GetUser() user: AuthPayload,
+    @Param('userId') userId: number,
+  ) {
+    return await this.userService.deleteUser(userId);
+  }
+
 }

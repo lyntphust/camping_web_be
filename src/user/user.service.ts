@@ -251,6 +251,40 @@ async removeFavoriteProduct(userId: number, productId: number) {
     };
   }
 
+  async getAllUser(page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit; // Tính số bản ghi cần bỏ qua
+    const [users, total] = await this.userRepository.findAndCount({
+      skip,
+      take: limit,
+    });
+    const sanitizedUsers = users.map((user) => {
+      const { password, ...rest } = user; // Loại bỏ trường `password`
+      return rest;
+    });
+  
+    return {
+      data: sanitizedUsers,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async deleteUser(userId: number): Promise<{ message: string; user?: User }> {
+    const userFound = await this.userRepository.findOne(userId);
+  
+    if (!userFound) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+  
+    await this.userRepository.delete(userId);
+  
+    return {
+      message: `User with ID ${userId} has been successfully deleted`,
+    };
+  }
+
   async removeProductFromCart(productId: number, userId: number) {
     // Tìm sản phẩm trong giỏ hàng dựa trên productId và userId
     const existingCartItem = await this.productCartRepository.findOne({
