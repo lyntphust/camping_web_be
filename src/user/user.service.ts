@@ -14,6 +14,8 @@ import { ProductVariant } from 'src/product/enities/product-variant.entity';
 import { Product } from 'src/product/enities/product.entity';
 import { S3CoreService } from 'src/s3/src';
 import { RoleService } from '../role/role.service';
+import { UpdatePasswordDto } from './dto/updatePasswordDto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -31,8 +33,37 @@ export class UserService {
     private readonly s3Service: S3CoreService,
   ) {}
 
-  async getUserById(userId: number) {
+
+  async updateUser(userId: number, updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.findOne(userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found.`);
+    }
+
+    Object.assign(user, updateUserDto);
+    return await this.userRepository.save(user);
+  }
+
+  async updatePassword(userId: number, updatePasswordDto: UpdatePasswordDto) {
+    const user = await this.userRepository.findOne(userId);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found.`);
+    }
+  
+    const isPasswordMatching = await bcrypt.compare(updatePasswordDto.currentPassword, user.password);
+    if (!isPasswordMatching) {
+      throw new Error('Current password is incorrect.');
+    }
+  
+    const hashedPassword = await bcrypt.hash(updatePasswordDto.newPassword, 7);
+    user.password = hashedPassword;
+    return await this.userRepository.save(user);
+  }
+  
+
+  
+  async getUserById(userId: number) {
+    const user = await this.userRepository.find({where:{id:userId},relations:['role']});
     delete user.password;
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found.`);
