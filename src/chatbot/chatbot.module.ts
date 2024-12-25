@@ -2,11 +2,11 @@ import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Product } from 'src/product/enities/product.entity';
-import { Blog } from 'src/user/entities/blog.entity';
 import { ChatbotController } from './chatbot.controller';
 import { ChatbotService } from './chatbot.service';
 import { ChatbotHistory } from './entities/chatbot-history.entity';
+import { Product } from 'src/product/entities/product.entity';
+import { Blog } from 'src/user/entities/blog.entity';
 
 @Module({
   imports: [

@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Req,
   Res,
 } from '@nestjs/common';
@@ -18,6 +19,8 @@ import { AuthPayload, GetUser } from 'src/decorator/getUser.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AddProductToCartDto } from './dto/add-product.dto';
 import { Public } from 'src/decorator/public.decorator';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/updatePasswordDto';
 
 @Controller('user')
 @ApiBearerAuth()
@@ -25,6 +28,33 @@ import { Public } from 'src/decorator/public.decorator';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+
+@Put('/update')
+async updateUser(
+  @GetUser() user: AuthPayload,
+  @Body() updateUserDto: UpdateUserDto,
+) {
+  try {
+    return await this.userService.updateUser(user.id, updateUserDto);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
+
+@Put('/update-password')
+async updatePassword(
+  @GetUser() user: AuthPayload,
+  @Body() updatePasswordDto: UpdatePasswordDto,
+) {
+  try {
+    return await this.userService.updatePassword(user.id, updatePasswordDto);
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
+
+
+  
 // Yêu thích 1 sản phẩm
 @Post('/favorite/:productId')
 async favoriteProduct(
@@ -70,11 +100,10 @@ async removeFavoriteProduct(
   }
 
   @Public()
-  @Get('/all/:pageNumber/:pageSize')
-  async getAllUser(@Param('pageNumber') pageNumber: number,
-  @Param('pageSize') pageSize: number) {
+  @Get('/all')
+  async getAllUser() {
     try {
-      return await this.userService.getAllUser(pageNumber,pageSize);
+      return await this.userService.getAllUser();
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

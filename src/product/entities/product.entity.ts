@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { ProductVariant } from './product-variant.entity';
 import { OrdersProducts } from 'src/order/entities/orders-products.entity';
 import { FavoriteProduct } from './favorite-product.entity';
-
+import { Comment } from 'src/comment/comment.entity';
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn()
@@ -11,11 +11,8 @@ export class Product {
   @Column({ length: 50 })
   name: string;
 
-
-
   @Column()
   discount: number;
-
 
   @Column()
   price: number;
@@ -34,6 +31,6 @@ export class Product {
 
   @OneToMany(() => FavoriteProduct, (favorite) => favorite.product)
   favoriteProducts: FavoriteProduct[];
-  
-
+  @OneToMany(() => Comment, (comment) => comment.product)
+  comments: Comment[];
 }

@@ -8,12 +8,13 @@ import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
 import { ChatbotHistory } from './chatbot/entities/chatbot-history.entity';
+import { CommentModule } from './comment/comment.module';
 import { Order } from './order/entities/order.entity';
 import { OrdersProducts } from './order/entities/orders-products.entity';
 import { OrderModule } from './order/order.module';
-import { ProductCart } from './product/enities/product-cart.entity';
-import { ProductVariant } from './product/enities/product-variant.entity';
-import { Product } from './product/enities/product.entity';
+import { ProductCart } from './product/entities/product-cart.entity';
+import { ProductVariant } from './product/entities/product-variant.entity';
+import { Product } from './product/entities/product.entity';
 import { ProductModule } from './product/product.module';
 import { Role } from './role/entities/role.entity';
 import { RoleModule } from './role/role.module';
@@ -58,6 +59,7 @@ import { UserModule } from './user/user.module';
     AuthModule,
     TokenModule,
     ChatbotModule,
+    CommentModule,
   ],
   providers: [
     {

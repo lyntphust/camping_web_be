@@ -8,14 +8,14 @@ import { RoleModule } from '../role/role.module';
 import { S3CoreModule } from 'src/s3/src/s3.module';
 
 import { UserService } from './user.service';
-import { ProductCart } from 'src/product/enities/product-cart.entity';
-import { ProductVariant } from 'src/product/enities/product-variant.entity';
+import { ProductCart } from 'src/product/entities/product-cart.entity';
+import { ProductVariant } from 'src/product/entities/product-variant.entity';
 import { UserController } from './user.controller';
 import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
 import { Blog } from './entities/blog.entity';
-import { Product } from 'src/product/enities/product.entity';
-import { FavoriteProduct } from 'src/product/enities/favorite-product.entity';
+import { Product } from 'src/product/entities/product.entity';
+import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Permission, ProductCart, ProductVariant, Blog, Product, FavoriteProduct]),

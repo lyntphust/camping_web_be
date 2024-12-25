@@ -1,10 +1,10 @@
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Product } from 'src/product/enities/product.entity';
 import { Blog } from 'src/user/entities/blog.entity';
 import { Repository } from 'typeorm';
 import { ChatbotHistoryRole } from './entities/chatbot-history.entity';
+import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class ChatbotService {

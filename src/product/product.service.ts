@@ -6,13 +6,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { Product } from './enities/product.entity';
+import { Product } from './entities/product.entity';
 
 import { S3CoreService } from 'src/s3/src';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateProductDto, ProductVariantDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductVariant } from './enities/product-variant.entity';
+import { ProductVariant } from './entities/product-variant.entity';
 @Injectable()
 export class ProductService {
   constructor(
