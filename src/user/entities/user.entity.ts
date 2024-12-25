@@ -11,6 +11,7 @@ import { Order } from '../../order/entities/order.entity';
 import { Role } from '../../role/entities/role.entity';
 import { ProductCart } from 'src/product/entities/product-cart.entity';
 import { Blog } from './blog.entity';
+import { ChatbotHistory } from 'src/chatbot/entities/chatbot-history.entity';
 import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
 import { Comment } from 'src/comment/comment.entity';
 
@@ -50,14 +51,15 @@ export class User {
   )
   productCarts: ProductCart[];
 
-
   @OneToMany(() => Blog, (blog) => blog.user)
   blogs: Blog[];
 
   @OneToMany(() => FavoriteProduct, (favorite) => favorite.user)
-favoriteProducts: FavoriteProduct[];
+  favoriteProducts: FavoriteProduct[];
 
+  @OneToMany(() => ChatbotHistory, (chatHistory) => chatHistory.user)
+  chatbotHistories: ChatbotHistory[];
 
-@OneToMany(() => Comment, (comment) => comment.user)
-comments: Comment[];
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
 }

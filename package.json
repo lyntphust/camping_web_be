@@ -25,6 +25,7 @@
     "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -n"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@nestjs/common": "^8.4.7",
     "@nestjs/config": "^1.1.0",
     "@nestjs/core": "^8.0.0",
@@ -40,6 +41,7 @@
     "class-validator": "^0.13.2",
     "cookie-parser": "^1.4.6",
     "nestjs-stripe": "^1.0.0",
+    "openai": "^4.77.0",
     "pg": "^8.7.1",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",

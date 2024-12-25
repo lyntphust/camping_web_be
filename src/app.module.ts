@@ -1,25 +1,27 @@
-import { ConfigModule } from '@nestjs/config';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { UserModule } from './user/user.module';
-import { OrderModule } from './order/order.module';
-import { ProductModule } from './product/product.module';
-import { RoleModule } from './role/role.module';
-import { AuthModule } from './auth/auth.module';
-import { TokenModule } from './token/token.module';
+import { APP_GUARD } from '@nestjs/core';
 import { StripeModule } from 'nestjs-stripe';
-import { ProductCart } from './product/entities/product-cart.entity';
-import { User } from './user/entities/user.entity';
-import { Product } from './product/entities/product.entity';
-import { Role } from './role/entities/role.entity';
+import { AuthGuard } from './auth/auth.guard';
+import { AuthModule } from './auth/auth.module';
+import { ChatbotModule } from './chatbot/chatbot.module';
+import { ChatbotHistory } from './chatbot/entities/chatbot-history.entity';
+import { CommentModule } from './comment/comment.module';
 import { Order } from './order/entities/order.entity';
 import { OrdersProducts } from './order/entities/orders-products.entity';
-import { Permission } from './user/entities/permission.entity';
-import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth/auth.guard';
+import { OrderModule } from './order/order.module';
+import { ProductCart } from './product/entities/product-cart.entity';
 import { ProductVariant } from './product/entities/product-variant.entity';
-import { CommentModule } from './comment/comment.module';
+import { Product } from './product/entities/product.entity';
+import { ProductModule } from './product/product.module';
+import { Role } from './role/entities/role.entity';
+import { RoleModule } from './role/role.module';
+import { TokenModule } from './token/token.module';
+import { Permission } from './user/entities/permission.entity';
+import { User } from './user/entities/user.entity';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -40,6 +42,7 @@ import { CommentModule } from './comment/comment.module';
         OrdersProducts,
         Permission,
         ProductVariant,
+        ChatbotHistory,
       ],
       autoLoadEntities: true,
       synchronize: false,
@@ -55,7 +58,8 @@ import { CommentModule } from './comment/comment.module';
     RoleModule,
     AuthModule,
     TokenModule,
-    CommentModule
+    ChatbotModule,
+    CommentModule,
   ],
   providers: [
     {
