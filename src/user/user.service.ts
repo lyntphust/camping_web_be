@@ -284,7 +284,7 @@ async removeFavoriteProduct(userId: number, productId: number) {
 
   async getAllUser(page: number = 1, limit: number = 10) {
     const skip = (page - 1) * limit; // Tính số bản ghi cần bỏ qua
-    const [users, total] = await this.userRepository.findAndCount({
+    const [users] = await this.userRepository.findAndCount({
       skip,
       take: limit,
     });
@@ -293,13 +293,7 @@ async removeFavoriteProduct(userId: number, productId: number) {
       return rest;
     });
   
-    return {
-      data: sanitizedUsers,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    return sanitizedUsers;
   }
 
   async deleteUser(userId: number): Promise<{ message: string; user?: User }> {
