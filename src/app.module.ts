@@ -9,16 +9,17 @@ import { RoleModule } from './role/role.module';
 import { AuthModule } from './auth/auth.module';
 import { TokenModule } from './token/token.module';
 import { StripeModule } from 'nestjs-stripe';
-import { ProductCart } from './product/enities/product-cart.entity';
+import { ProductCart } from './product/entities/product-cart.entity';
 import { User } from './user/entities/user.entity';
-import { Product } from './product/enities/product.entity';
+import { Product } from './product/entities/product.entity';
 import { Role } from './role/entities/role.entity';
 import { Order } from './order/entities/order.entity';
 import { OrdersProducts } from './order/entities/orders-products.entity';
 import { Permission } from './user/entities/permission.entity';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
-import { ProductVariant } from './product/enities/product-variant.entity';
+import { ProductVariant } from './product/entities/product-variant.entity';
+import { CommentModule } from './comment/comment.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ProductVariant } from './product/enities/product-variant.entity';
     RoleModule,
     AuthModule,
     TokenModule,
+    CommentModule
   ],
   providers: [
     {

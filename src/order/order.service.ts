@@ -14,7 +14,7 @@ import { CreateOrderDto, ProductDto } from './dto/create-order.dto';
 import { ProductService } from '../product/product.service';
 import { UserService } from '../user/user.service';
 import { Status } from './enums/status.enum';
-import { ProductVariant } from 'src/product/enities/product-variant.entity';
+import { ProductVariant } from 'src/product/entities/product-variant.entity';
 
 @Injectable()
 export class OrderService {

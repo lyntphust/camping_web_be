@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { ProductVariant } from 'src/product/enities/product-variant.entity';
+import { ProductVariant } from 'src/product/entities/product-variant.entity';
 import { Order } from './order.entity';
 
 @Entity()

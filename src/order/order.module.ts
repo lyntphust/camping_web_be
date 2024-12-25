@@ -13,7 +13,7 @@ import { OrderController } from './order.controller';
 
 import { OrderService } from './order.service';
 import { OrdersProducts } from './entities/orders-products.entity';
-import { ProductVariant } from 'src/product/enities/product-variant.entity';
+import { ProductVariant } from 'src/product/entities/product-variant.entity';
 
 @Module({
   imports: [

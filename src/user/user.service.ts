@@ -8,10 +8,10 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-import { FavoriteProduct } from 'src/product/enities/favorite-product.entity';
-import { ProductCart } from 'src/product/enities/product-cart.entity';
-import { ProductVariant } from 'src/product/enities/product-variant.entity';
-import { Product } from 'src/product/enities/product.entity';
+import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
+import { ProductCart } from 'src/product/entities/product-cart.entity';
+import { ProductVariant } from 'src/product/entities/product-variant.entity';
+import { Product } from 'src/product/entities/product.entity';
 import { S3CoreService } from 'src/s3/src';
 import { RoleService } from '../role/role.service';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
@@ -64,7 +64,7 @@ export class UserService {
   
   async getUserById(userId: number) {
     const user = await this.userRepository.find({where:{id:userId},relations:['role']});
-    delete user.password;
+    delete user['password'];
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found.`);
     }

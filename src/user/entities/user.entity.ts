@@ -9,9 +9,10 @@ import {
 
 import { Order } from '../../order/entities/order.entity';
 import { Role } from '../../role/entities/role.entity';
-import { ProductCart } from 'src/product/enities/product-cart.entity';
+import { ProductCart } from 'src/product/entities/product-cart.entity';
 import { Blog } from './blog.entity';
-import { FavoriteProduct } from 'src/product/enities/favorite-product.entity';
+import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
+import { Comment } from 'src/comment/comment.entity';
 
 @Entity()
 export class User {
@@ -55,4 +56,8 @@ export class User {
 
   @OneToMany(() => FavoriteProduct, (favorite) => favorite.user)
 favoriteProducts: FavoriteProduct[];
+
+
+@OneToMany(() => Comment, (comment) => comment.user)
+comments: Comment[];
 }
