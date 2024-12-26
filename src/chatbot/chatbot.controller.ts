@@ -1,11 +1,13 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
+  Param,
   Post,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/decorator/public.decorator';
 import { ChatbotService } from './chatbot.service';
 import { ChatHistoryCreateDto } from './dto/chat-history-create.dto';
@@ -26,12 +28,21 @@ export class ChatbotController {
     }
 
     try {
-      const response = await this.chatbotService.getChatResponse(
-        data.content,
-        data.sessionId,
+      return await this.chatbotService.sendChat(data.content, data.sessionId);
+    } catch (error) {
+      console.error('Error in ChatbotController:', error);
+      throw new HttpException(
+        'Failed to process the message',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
 
-      return { response };
+  @Get('/:sessionId')
+  @Public()
+  async getMessageHistory(@Param('sessionId') sessionId?: string) {
+    try {
+      return await this.chatbotService.getMessageHistory(sessionId);
     } catch (error) {
       console.error('Error in ChatbotController:', error);
       throw new HttpException(
