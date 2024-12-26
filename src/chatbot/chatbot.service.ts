@@ -1,10 +1,10 @@
 import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Product } from 'src/product/entities/product.entity';
 import { Blog } from 'src/user/entities/blog.entity';
 import { Repository } from 'typeorm';
 import { ChatbotHistoryRole } from './entities/chatbot-history.entity';
-import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class ChatbotService {
@@ -33,21 +33,23 @@ export class ChatbotService {
         parts: [
           {
             text: `
-          Remember that you are a website which provides camping equipments shopping and sharing blogs.
-          I am a user to your website.
-          - Some of the products you have are:
+          Remember: 
+          1. Your name is "Wildnest Bot" - a chatbot of Camping Web. Your website provides camping equipments and sharing blogs.
+          2. I am a user to your website.
+          3. Some products you have are:
           ${products
             .map(
-              ({ name, description, price }) => `
-            + ${name}: ${description} ($${price})
+              ({ name, description = '', price, category }) => `
+            ${name}: ${description} ($${price}) - category: ${category}
             `,
             )
             .join('')}
-          - Some of the blogs you have are:
+          4. Some blogs you have are:
           ${blogs.map(
-            ({ text, location }) => `
-            + ${text} (${location})
-            Remember to response in the current message of the user.
+            ({ text, location = '' }) => `
+            ${text} (${location})
+
+          5. You in the language of the current message.
             `,
           )}
         `,
@@ -57,7 +59,48 @@ export class ChatbotService {
     ];
   }
 
-  async getChatResponse(userMessage: string, sessionId?: string) {
+  private ApiRoleMapping = {
+    [ChatbotHistoryRole.USER]: 'user',
+    [ChatbotHistoryRole.MODEL]: 'bot',
+  };
+
+  public async getMessageHistory(sessionId?: string) {
+    const starterMessage = {
+      role: 'bot',
+      content: 'Xin chào, tôi có thể giúp gì cho bạn?',
+    };
+
+    if (!sessionId) {
+      return [starterMessage];
+    }
+
+    const chatSession = this.chatSessions[sessionId];
+
+    if (!chatSession) {
+      return [starterMessage];
+    }
+
+    const history = await chatSession.getHistory();
+
+    const messages = [];
+
+    for (const message of history) {
+      messages.push({
+        role: this.ApiRoleMapping[message.role],
+        content: message.parts.map((part) => part.text).join(''),
+      });
+    }
+
+    if (messages.length === 0) {
+      messages.push(starterMessage);
+    } else {
+      messages[0] = starterMessage;
+    }
+
+    return messages;
+  }
+
+  async sendChat(userMessage: string, sessionId?: string) {
     let sessionToUse = sessionId ?? Math.random().toString();
 
     let resultSession = this.chatSessions[sessionToUse];
@@ -76,6 +119,9 @@ export class ChatbotService {
 
     const assistantMessage = result.response.text() || '';
 
-    return { message: assistantMessage, sessionId: sessionToUse };
+    return {
+      message: assistantMessage,
+      sessionId: sessionToUse,
+    };
   }
 }
