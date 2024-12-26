@@ -109,6 +109,25 @@ export class OrderService {
     return orders;
   }
 
+    /**
+   * Get all orders of a specific user.
+   */
+    async getAllOrders() {
+      const orders = await this.orderRepository.find({
+        relations: [
+          'OrdersProducts',
+          'OrdersProducts.productVariant',
+          'OrdersProducts.productVariant.product',
+        ],
+      });
+  
+      if (orders.length === 0) {
+        throw new NotFoundException('No orders found for this user.');
+      }
+  
+      return orders;
+    }
+
   /**
    * Update the status of an order (Admin only).
    * @param orderId Order ID

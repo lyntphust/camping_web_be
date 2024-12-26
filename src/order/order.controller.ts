@@ -48,6 +48,12 @@ export class OrderController {
     return await this.orderService.getUserOrders(userId);
   }
 
+  @Get("/all") 
+    async getAllOrders() {
+      return await this.orderService.getAllOrders();
+    }
+  
+
   /**
    * Admin updates the status of an order.
    */

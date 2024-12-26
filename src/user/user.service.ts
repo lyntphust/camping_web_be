@@ -295,6 +295,7 @@ async removeFavoriteProduct(userId: number, productId: number) {
     const [users] = await this.userRepository.findAndCount({
       skip,
       take: limit,
+      relations: ['role'],
     });
     const sanitizedUsers = users.map((user) => {
       const { password, ...rest } = user; // Loại bỏ trường `password`
