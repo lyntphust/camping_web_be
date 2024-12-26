@@ -1,7 +1,13 @@
 import { Controller, Post, Get, Body, Param, Query } from '@nestjs/common';
 import { CommentService } from './comment.service';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { CreateCommentDto } from './add-comment.dto';
+import { Public } from 'src/decorator/public.decorator';
 
 @ApiTags('comments')
 @Controller('comments')
@@ -15,10 +21,16 @@ export class CommentController {
   @ApiResponse({ status: 404, description: 'Product or user not found' })
   async createComment(@Body() createCommentDto: CreateCommentDto) {
     const { userId, productId, rating, comment } = createCommentDto;
-    return this.commentService.createComment(userId, productId, rating, comment);
+    return this.commentService.createComment(
+      userId,
+      productId,
+      rating,
+      comment,
+    );
   }
 
   @Get('/product/:productId')
+  @Public()
   @ApiOperation({ summary: 'Get all comments for a product' })
   @ApiResponse({ status: 200, description: 'Comments retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Product not found' })
