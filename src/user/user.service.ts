@@ -112,12 +112,20 @@ async getFavoriteProducts(userId: number) {
     relations: ['product'],
   });
 
-  return favorites.map((fav) => ({
-    productId: fav.product.id,
-    name: fav.product.name,
-    price: fav.product.price,
-    photo: fav.product.photo,
-  }));
+  const favoriteProducts = await Promise.all(
+    favorites.map(async (fav) => {
+      const photoLink = await this.s3Service.getLinkFromS3(fav.product.photo);
+      return {
+        productId: fav.product.id,
+        name: fav.product.name,
+        price: fav.product.price,
+        discount: fav.product.discount,
+        photo: photoLink,
+      };
+    }),
+  );
+
+  return favoriteProducts;
 }
 
 // Xóa sản phẩm khỏi danh sách yêu thích
