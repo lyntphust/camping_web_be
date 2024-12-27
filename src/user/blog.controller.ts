@@ -7,6 +7,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -17,6 +18,7 @@ import { AuthPayload } from 'src/decorator/getUser.decorator';
 import { GetUser } from 'src/decorator/getUser.decorator';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { CreateBlogDto } from './dto/add-blog.dto';
+import { Public } from 'src/decorator/public.decorator';
 
 @Controller('blog')
 @ApiBearerAuth()
@@ -25,6 +27,7 @@ export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   @Get('/admin')
+  @Public()
   @ApiQuery({ name: 'status', required: false, type: String, description: 'Filter by blog status (optional)' })
 @ApiQuery({ name: 'userId', required: false, type: Number, description: 'Filter by user ID (optional)' })
 @ApiQuery({ name: 'location', required: false, type: String, description: 'Filter by blog location (optional)' })
@@ -40,10 +43,10 @@ export class BlogController {
     }
   }
 
-  @Post('/admin/update-status/:blogId')
+  @Patch('/admin/update-status/:blogId/:status')
   async adminUpdateBlogStatus(
     @Param('blogId') blogId: number,
-    @Body('status') status: string, // Expect new status in body
+    @Param('status') status: string,
   ) {
     try {
       return await this.blogService.updateBlogStatus(blogId, status);
