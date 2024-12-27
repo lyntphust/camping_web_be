@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
 import { User } from './user.entity'; // Đường dẫn tới User entity (cần cập nhật tùy theo cấu trúc dự án)
 
 export enum BlogStatus {
@@ -33,4 +33,9 @@ export class Blog {
     default: BlogStatus.PENDING,
   })
   status: BlogStatus;
+   @CreateDateColumn({ type: 'timestamp' })
+  createdAt: Date;
+
+  // @Column('text')
+  // title: string;
 }
