@@ -37,6 +37,9 @@ export class CreateOrderDto {
   @IsString()
   readonly phone: string;
 
+  @ApiProperty()
+  readonly price: number;
+
   @ApiProperty({
     description: 'List of product variants with their quantities',
     type: [ProductDto], // Specify this is an array of ProductDto

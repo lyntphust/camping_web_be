@@ -36,12 +36,15 @@ export class OrderService {
   async createOrder(userId: number, createOrderDto: CreateOrderDto) {
     const { address, phone, products } = createOrderDto;
 
+    let orderPrice = 0;
+
     // Validate products and stock using productVariantRepository
     const validatedProducts = await Promise.all(
       products.map(async (product: ProductDto) => {
         // Find product variant using productVariantRepository
         const existingVariant = await this.productVariantRepository.findOne({
           where: { id: product.id },
+          relations: ['product'],
         });
 
         if (!existingVariant) {
@@ -61,6 +64,13 @@ export class OrderService {
         existingVariant.sold += product.quantity;
         await this.productVariantRepository.save(existingVariant);
 
+        orderPrice +=
+          (product.quantity *
+            existingVariant.price *
+            (100 - existingVariant.product.discount)) /
+            100 +
+          50000;
+
         return {
           productVariant: existingVariant,
           quantity: product.quantity,
@@ -70,7 +80,7 @@ export class OrderService {
     );
 
     const savedOrder = await this.orderRepository.save({
-      price: 0,
+      price: orderPrice,
       address,
       phone,
       status: 'CREATED',
@@ -109,58 +119,60 @@ export class OrderService {
     }
     const updatedOrders = await Promise.all(
       orders.map(async (order) => {
-        const firstPhotoKey = order.OrdersProducts[0]?.productVariant?.product?.photo;
+        const firstPhotoKey =
+          order.OrdersProducts[0]?.productVariant?.product?.photo;
         let orderImage = null;
-        console.log('aaaa: ', firstPhotoKey)
+        console.log('aaaa: ', firstPhotoKey);
         // Only fetch the image link if a photo key exists
         if (firstPhotoKey) {
           orderImage = await this.s3Service.getLinkFromS3(firstPhotoKey);
         }
-  
+
         return {
           ...order,
-          image: orderImage, 
+          image: orderImage,
         };
       }),
     );
-  
+
     return updatedOrders;
   }
 
-    /**
+  /**
    * Get all orders of a specific user.
    */
-    async getAllOrders() {
-      const orders = await this.orderRepository.find({
-        relations: [
-          'OrdersProducts',
-          'OrdersProducts.productVariant',
-          'OrdersProducts.productVariant.product',
-        ],
-      });
-      if (orders.length === 0) {
-        throw new NotFoundException('No orders found for this user.');
-      }
-
-      const updatedOrders = await Promise.all(
-        orders.map(async (order) => {
-          const firstPhotoKey = order.OrdersProducts[0]?.productVariant?.product?.photo;
-          let orderImage = null;
-          console.log('aaaa: ', firstPhotoKey)
-          // Only fetch the image link if a photo key exists
-          if (firstPhotoKey) {
-            orderImage = await this.s3Service.getLinkFromS3(firstPhotoKey);
-          }
-    
-          return {
-            ...order,
-            image: orderImage, 
-          };
-        }),
-      );
-    
-      return updatedOrders;
+  async getAllOrders() {
+    const orders = await this.orderRepository.find({
+      relations: [
+        'OrdersProducts',
+        'OrdersProducts.productVariant',
+        'OrdersProducts.productVariant.product',
+      ],
+    });
+    if (orders.length === 0) {
+      throw new NotFoundException('No orders found for this user.');
     }
+
+    const updatedOrders = await Promise.all(
+      orders.map(async (order) => {
+        const firstPhotoKey =
+          order.OrdersProducts[0]?.productVariant?.product?.photo;
+        let orderImage = null;
+        console.log('aaaa: ', firstPhotoKey);
+        // Only fetch the image link if a photo key exists
+        if (firstPhotoKey) {
+          orderImage = await this.s3Service.getLinkFromS3(firstPhotoKey);
+        }
+
+        return {
+          ...order,
+          image: orderImage,
+        };
+      }),
+    );
+
+    return updatedOrders;
+  }
 
   /**
    * Update the status of an order (Admin only).
