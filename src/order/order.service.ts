@@ -68,8 +68,7 @@ export class OrderService {
           (product.quantity *
             existingVariant.price *
             (100 - existingVariant.product.discount)) /
-            100 +
-          50000;
+            100;
 
         return {
           productVariant: existingVariant,
@@ -80,7 +79,7 @@ export class OrderService {
     );
 
     const savedOrder = await this.orderRepository.save({
-      price: orderPrice,
+      price: orderPrice + 50000,
       address,
       phone,
       status: 'CREATED',
@@ -119,19 +118,27 @@ export class OrderService {
     }
     const updatedOrders = await Promise.all(
       orders.map(async (order) => {
-        const firstPhotoKey =
-          order.OrdersProducts[0]?.productVariant?.product?.photo;
-        let orderImage = null;
-        console.log('aaaa: ', firstPhotoKey);
+      const updatedOrderProducts = await Promise.all(
+        order.OrdersProducts.map(async (orderProduct) => {
+        const photoKey = orderProduct.productVariant.product.photo;
+        let productImage = null;
+
         // Only fetch the image link if a photo key exists
-        if (firstPhotoKey) {
-          orderImage = await this.s3Service.getLinkFromS3(firstPhotoKey);
+        if (photoKey) {
+          productImage = await this.s3Service.getLinkFromS3(photoKey);
         }
 
         return {
-          ...order,
-          image: orderImage,
+          ...orderProduct,
+          image: productImage,
         };
+        }),
+      );
+
+      return {
+        ...order,
+        OrdersProducts: updatedOrderProducts,
+      };
       }),
     );
 
