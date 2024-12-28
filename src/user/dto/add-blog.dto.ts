@@ -2,6 +2,12 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateBlogDto {
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty()
+  title: string;
+
   @IsNotEmpty()
   @IsString()
   @ApiProperty()
@@ -10,7 +16,6 @@ export class CreateBlogDto {
   @IsOptional()
   @IsString()
   @ApiProperty()
-
   image?: string;
 
   @IsOptional()

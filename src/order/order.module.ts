@@ -14,6 +14,7 @@ import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { OrdersProducts } from './entities/orders-products.entity';
 import { ProductVariant } from 'src/product/entities/product-variant.entity';
+import { S3CoreModule } from 'src/s3/src';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { ProductVariant } from 'src/product/entities/product-variant.entity';
     TokenModule,
     AuthModule,
     RoleModule,
+    S3CoreModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

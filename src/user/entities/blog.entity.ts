@@ -13,6 +13,9 @@ export class Blog {
   id: number;
 
   @Column('text')
+  title: string;
+
+  @Column('text')
   text: string;
 
   @Column('text', { nullable: true })

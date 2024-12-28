@@ -15,6 +15,7 @@ import { ProductService } from '../product/product.service';
 import { UserService } from '../user/user.service';
 import { Status } from './enums/status.enum';
 import { ProductVariant } from 'src/product/entities/product-variant.entity';
+import { S3CoreService } from 'src/s3/src';
 
 @Injectable()
 export class OrderService {
@@ -29,6 +30,7 @@ export class OrderService {
     @InjectStripe() private readonly stripeClient: Stripe,
     private readonly productService: ProductService,
     private readonly userService: UserService,
+    private readonly s3Service: S3CoreService,
   ) {}
 
   async createOrder(userId: number, createOrderDto: CreateOrderDto) {
@@ -105,8 +107,24 @@ export class OrderService {
     if (orders.length === 0) {
       throw new NotFoundException('No orders found for this user.');
     }
-
-    return orders;
+    const updatedOrders = await Promise.all(
+      orders.map(async (order) => {
+        const firstPhotoKey = order.OrdersProducts[0]?.productVariant?.product?.photo;
+        let orderImage = null;
+        console.log('aaaa: ', firstPhotoKey)
+        // Only fetch the image link if a photo key exists
+        if (firstPhotoKey) {
+          orderImage = await this.s3Service.getLinkFromS3(firstPhotoKey);
+        }
+  
+        return {
+          ...order,
+          image: orderImage, 
+        };
+      }),
+    );
+  
+    return updatedOrders;
   }
 
     /**
@@ -120,12 +138,28 @@ export class OrderService {
           'OrdersProducts.productVariant.product',
         ],
       });
-  
       if (orders.length === 0) {
         throw new NotFoundException('No orders found for this user.');
       }
-  
-      return orders;
+
+      const updatedOrders = await Promise.all(
+        orders.map(async (order) => {
+          const firstPhotoKey = order.OrdersProducts[0]?.productVariant?.product?.photo;
+          let orderImage = null;
+          console.log('aaaa: ', firstPhotoKey)
+          // Only fetch the image link if a photo key exists
+          if (firstPhotoKey) {
+            orderImage = await this.s3Service.getLinkFromS3(firstPhotoKey);
+          }
+    
+          return {
+            ...order,
+            image: orderImage, 
+          };
+        }),
+      );
+    
+      return updatedOrders;
     }
 
   /**

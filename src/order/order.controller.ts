@@ -45,6 +45,7 @@ export class OrderController {
   @Get()
   async getUserOrders(@GetUser() user: AuthPayload) {
     const userId = user.id;
+    console.log('aaaaaaaaaaaaaa')
     return await this.orderService.getUserOrders(userId);
   }
 
