@@ -1,8 +1,14 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { ProductVariant } from './product-variant.entity';
-import { OrdersProducts } from 'src/order/entities/orders-products.entity';
-import { FavoriteProduct } from './favorite-product.entity';
 import { Comment } from 'src/comment/comment.entity';
+import { Blog } from 'src/user/entities/blog.entity';
+import {
+  Column,
+  Entity,
+  ManyToMany,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { FavoriteProduct } from './favorite-product.entity';
+import { ProductVariant } from './product-variant.entity';
 @Entity()
 export class Product {
   @PrimaryGeneratedColumn()
@@ -33,4 +39,10 @@ export class Product {
   favoriteProducts: FavoriteProduct[];
   @OneToMany(() => Comment, (comment) => comment.product)
   comments: Comment[];
+
+  @ManyToMany(() => Blog, (blog) => blog.products, {
+    onDelete: 'NO ACTION',
+    onUpdate: 'NO ACTION',
+  })
+  blogs: Product[];
 }

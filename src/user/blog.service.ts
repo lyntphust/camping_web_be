@@ -4,19 +4,23 @@ import { Repository } from 'typeorm';
 import { Blog, BlogStatus } from './entities/blog.entity';
 import { CreateBlogDto } from './dto/add-blog.dto';
 import { S3CoreService } from 'src/s3/src';
+import { BlogProduct } from './entities/blog-product.entity';
 
 @Injectable()
 export class BlogService {
   constructor(
     @InjectRepository(Blog)
     private readonly blogRepository: Repository<Blog>,
+    @InjectRepository(BlogProduct)
+    private readonly blogProductRepository: Repository<BlogProduct>,
     private readonly s3Service: S3CoreService,
   ) {}
 
   async getAdminViewBlogs(status?: string, userId?: number, location?: string) {
     const query = this.blogRepository
       .createQueryBuilder('blog')
-      .leftJoinAndSelect('blog.user', 'user');
+      .leftJoinAndSelect('blog.user', 'user')
+      .leftJoinAndSelect('blog.products', 'products');
 
     // Apply filters if provided
     if (status) {
@@ -72,7 +76,15 @@ export class BlogService {
       status: BlogStatus.PENDING, // Mặc định trạng thái là 'pending'
     });
 
-    return await this.blogRepository.save(newBlog);
+    const savedBlog = await this.blogRepository.save(newBlog);
+
+    const productIds = createBlogDto.productIds;
+    for (const product of productIds) {
+      await this.blogProductRepository.save({
+        blogId: savedBlog.id,
+        productId: product,
+      });
+    }
   }
 
   async deleteBlog(userId: number, blogId: number) {

@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Product } from 'src/product/entities/product.entity';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { User } from './user.entity'; // Đường dẫn tới User entity (cần cập nhật tùy theo cấu trúc dự án)
 
 export enum BlogStatus {
@@ -36,8 +45,25 @@ export class Blog {
     default: BlogStatus.PENDING,
   })
   status: BlogStatus;
-   @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
+
+  @ManyToMany(() => Product, (product: Product) => product.blogs, {
+    onDelete: 'NO ACTION',
+    onUpdate: 'NO ACTION',
+  })
+  @JoinTable({
+    name: 'blog_product',
+    joinColumn: {
+      name: 'blogId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'productId',
+      referencedColumnName: 'id',
+    },
+  })
+  products: Product[];
 
   // @Column('text')
   // title: string;

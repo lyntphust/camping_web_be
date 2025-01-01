@@ -14,16 +14,26 @@ import { UserController } from './user.controller';
 import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
 import { Blog } from './entities/blog.entity';
+import { BlogProduct } from './entities/blog-product.entity';
 import { Product } from 'src/product/entities/product.entity';
 import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Permission, ProductCart, ProductVariant, Blog, Product, FavoriteProduct]),
+    TypeOrmModule.forFeature([
+      User,
+      Permission,
+      ProductCart,
+      ProductVariant,
+      Blog,
+      Product,
+      FavoriteProduct,
+      BlogProduct,
+    ]),
     RoleModule,
-    S3CoreModule
+    S3CoreModule,
   ],
-  controllers: [UserController,BlogController],
-  providers: [UserService,BlogService],
+  controllers: [UserController, BlogController],
+  providers: [UserService, BlogService],
   exports: [UserService],
 })
 export class UserModule {}

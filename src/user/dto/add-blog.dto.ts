@@ -1,8 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateBlogDto {
-
   @IsNotEmpty()
   @IsString()
   @ApiProperty()
@@ -22,4 +28,8 @@ export class CreateBlogDto {
   @IsString()
   @ApiProperty()
   location?: string;
+
+  @IsOptional()
+  @ApiProperty({ type: [Number] })
+  productIds?: number[];
 }
