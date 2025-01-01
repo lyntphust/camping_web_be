@@ -13,12 +13,9 @@ export class BlogService {
     private readonly s3Service: S3CoreService,
   ) {}
 
-  async getAdminViewBlogs(
-    status?: string,
-    userId?: number,
-    location?: string,
-  ) {
-    const query = this.blogRepository.createQueryBuilder('blog')
+  async getAdminViewBlogs(status?: string, userId?: number, location?: string) {
+    const query = this.blogRepository
+      .createQueryBuilder('blog')
       .leftJoinAndSelect('blog.user', 'user');
 
     // Apply filters if provided
@@ -41,11 +38,12 @@ export class BlogService {
     if (blogs.length === 0) {
       throw new NotFoundException('No blogs found with the given filters.');
     }
-    return blogs.map(blog => ({
+    return blogs.map((blog) => ({
       ...blog,
       user: {
         id: blog.user.id,
         name: blog.user.name,
+        email: blog.user.email,
       },
     }));
   }
@@ -92,5 +90,4 @@ export class BlogService {
 
     return { message: `Blog with ID ${blogId} has been deleted.` };
   }
-  
 }
