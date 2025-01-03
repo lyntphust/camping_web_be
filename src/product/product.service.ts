@@ -41,12 +41,9 @@ export class ProductService {
   }
 
   async findAllVariants(searchText = '', ids?: number[]) {
-    const queryBuilder =
-      this.productVariantRepository.createQueryBuilder('variant');
-
-    if (ids && ids.length > 0) {
-      queryBuilder.where('variant.id IN(:...ids)', { ids });
-    }
+    const queryBuilder = this.productVariantRepository
+      .createQueryBuilder('variant')
+      .where('variant.id IN(:...ids)', { ids });
 
     const variants = await queryBuilder
       .leftJoinAndSelect('variant.product', 'product')
