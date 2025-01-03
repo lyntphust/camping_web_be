@@ -69,6 +69,12 @@ export class Blog {
   })
   products: ProductVariant[];
 
+  @ManyToMany(() => User, (user) => user.blogs, {
+    onDelete: 'NO ACTION',
+    onUpdate: 'NO ACTION',
+  })
+  users: User[];
+
   // @Column('text')
   // title: string;
 }

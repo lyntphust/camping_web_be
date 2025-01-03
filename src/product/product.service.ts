@@ -41,32 +41,34 @@ export class ProductService {
   }
 
   async findAllVariants(searchText = '', ids?: number[]) {
-    const queryBuilder = this.productVariantRepository
-      .createQueryBuilder('variant')
-      .where('variant.id IN(:...ids)', { ids });
+    const queryBuilder =
+      this.productVariantRepository.createQueryBuilder('variant');
 
-    const variants = await queryBuilder
-      .leftJoinAndSelect('variant.product', 'product')
-      .andWhere(
-        new Brackets((qb) => {
-          qb.where('product.name LIKE :searchText', {
+    if (ids) {
+      queryBuilder.where('variant.product.id IN(:...ids)', { ids });
+    }
+
+    queryBuilder.leftJoinAndSelect('variant.product', 'product').andWhere(
+      new Brackets((qb) => {
+        qb.where('product.name LIKE :searchText', {
+          searchText: `%${searchText}%`,
+        })
+          .orWhere('product.category LIKE :searchText', {
             searchText: `%${searchText}%`,
           })
-            .orWhere('product.category LIKE :searchText', {
-              searchText: `%${searchText}%`,
-            })
-            .orWhere('product.description LIKE :searchText', {
-              searchText: `%${searchText}%`,
-            })
-            .orWhere('size LIKE :searchText', {
-              searchText: `%${searchText}%`,
-            })
-            .orWhere('color LIKE :searchText', {
-              searchText: `%${searchText}%`,
-            });
-        }),
-      )
-      .getMany();
+          .orWhere('product.description LIKE :searchText', {
+            searchText: `%${searchText}%`,
+          })
+          .orWhere('size LIKE :searchText', {
+            searchText: `%${searchText}%`,
+          })
+          .orWhere('color LIKE :searchText', {
+            searchText: `%${searchText}%`,
+          });
+      }),
+    );
+
+    const variants = await queryBuilder.getMany();
 
     variants.forEach(async (variant) => {
       const link = await this.s3Service.getLinkFromS3(variant.product.photo);

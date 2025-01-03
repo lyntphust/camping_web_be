@@ -16,12 +16,12 @@ export class BlogProduct {
     onUpdate: 'NO ACTION',
   })
   @JoinColumn([{ name: 'blogId', referencedColumnName: 'id' }])
-  blog: Blog[];
+  blog: Blog;
 
   @ManyToOne(() => ProductVariant, (product) => product.blogs, {
     onDelete: 'NO ACTION',
     onUpdate: 'NO ACTION',
   })
   @JoinColumn([{ name: 'productId', referencedColumnName: 'id' }])
-  product: Product[];
+  product: Product;
 }
