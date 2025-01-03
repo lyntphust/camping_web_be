@@ -39,10 +39,4 @@ export class Product {
   favoriteProducts: FavoriteProduct[];
   @OneToMany(() => Comment, (comment) => comment.product)
   comments: Comment[];
-
-  @ManyToMany(() => Blog, (blog) => blog.products, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
-  })
-  blogs: Product[];
 }

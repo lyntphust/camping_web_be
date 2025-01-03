@@ -1,8 +1,10 @@
 import { OrdersProducts } from 'src/order/entities/orders-products.entity';
+import { Blog } from 'src/user/entities/blog.entity';
 import {
   Column,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -43,4 +45,10 @@ export class ProductVariant {
     (ordersProducts) => ordersProducts.productVariant,
   )
   ordersProducts: OrdersProducts[];
+
+  @ManyToMany(() => Blog, (blog) => blog.products, {
+    onDelete: 'NO ACTION',
+    onUpdate: 'NO ACTION',
+  })
+  blogs: ProductVariant[];
 }

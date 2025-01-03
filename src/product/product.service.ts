@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 
 import { Product } from './entities/product.entity';
 
@@ -38,6 +38,45 @@ export class ProductService {
     const products = await this.productRepository.findOne({ category });
 
     return products;
+  }
+
+  async findAllVariants(searchText = '', ids?: number[]) {
+    const queryBuilder =
+      this.productVariantRepository.createQueryBuilder('variant');
+
+    if (ids && ids.length > 0) {
+      queryBuilder.where('variant.id IN(:...ids)', { ids });
+    }
+
+    const variants = await queryBuilder
+      .leftJoinAndSelect('variant.product', 'product')
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where('product.name LIKE :searchText', {
+            searchText: `%${searchText}%`,
+          })
+            .orWhere('product.category LIKE :searchText', {
+              searchText: `%${searchText}%`,
+            })
+            .orWhere('product.description LIKE :searchText', {
+              searchText: `%${searchText}%`,
+            })
+            .orWhere('size LIKE :searchText', {
+              searchText: `%${searchText}%`,
+            })
+            .orWhere('color LIKE :searchText', {
+              searchText: `%${searchText}%`,
+            });
+        }),
+      )
+      .getMany();
+
+    variants.forEach(async (variant) => {
+      const link = await this.s3Service.getLinkFromS3(variant.product.photo);
+      variant.product['image'] = link;
+    });
+
+    return variants;
   }
 
   async findManyByIds(arrayOfIds: Array<number>) {
