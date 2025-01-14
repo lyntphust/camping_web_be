@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Blog, BlogStatus } from './entities/blog.entity';
-import { CreateBlogDto } from './dto/add-blog.dto';
 import { S3CoreService } from 'src/s3/src';
+import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+import { CreateBlogDto } from './dto/add-blog.dto';
 import { BlogProduct } from './entities/blog-product.entity';
+import { Blog, BlogStatus } from './entities/blog.entity';
 
 @Injectable()
 export class BlogService {
@@ -42,6 +43,14 @@ export class BlogService {
     if (blogs.length === 0) {
       throw new NotFoundException('No blogs found with the given filters.');
     }
+
+    for (let i = 0; i < blogs.length; i++) {
+      if (blogs[i].image) {
+        const link = await this.s3Service.getLinkFromS3(blogs[i].image);
+        blogs[i]['image'] = link;
+      }
+    }
+
     return blogs.map((blog) => ({
       ...blog,
       user: {
@@ -69,12 +78,24 @@ export class BlogService {
     return { message: `Blog status updated to ${status}.` };
   }
 
-  async createBlog(userId: number, createBlogDto: CreateBlogDto) {
+  async createBlog(
+    userId: number,
+    createBlogDto: CreateBlogDto,
+    file: Express.Multer.File,
+  ) {
     const newBlog = this.blogRepository.create({
       ...createBlogDto,
       user: { id: userId }, // Liên kết user với blog
       status: BlogStatus.PENDING, // Mặc định trạng thái là 'pending'
     });
+
+    if (file[0]) {
+      // Upload file to S3
+      const prefix = 'blog-image';
+      const key = `${prefix}/${uuidv4()}/${file[0].originalname}`;
+      await this.s3Service.uploadFileWithStream(file[0].buffer, key);
+      newBlog.image = key;
+    }
 
     const savedBlog = await this.blogRepository.save(newBlog);
 
@@ -87,9 +108,9 @@ export class BlogService {
     }
   }
 
-  async deleteBlog(userId: number, blogId: number) {
+  async deleteBlog(blogId: number) {
     const blog = await this.blogRepository.findOne({
-      where: { id: blogId, user: { id: userId } },
+      where: { id: blogId },
     });
 
     if (!blog) {

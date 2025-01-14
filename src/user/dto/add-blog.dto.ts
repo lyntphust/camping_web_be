@@ -31,5 +31,5 @@ export class CreateBlogDto {
 
   @IsOptional()
   @ApiProperty({ type: [Number] })
-  productIds?: number[];
+  productIds?: number[] = [];
 }

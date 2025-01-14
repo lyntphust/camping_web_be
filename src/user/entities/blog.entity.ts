@@ -1,4 +1,4 @@
-import { Product } from 'src/product/entities/product.entity';
+import { ProductVariant } from 'src/product/entities/product-variant.entity';
 import {
   Column,
   CreateDateColumn,
@@ -48,10 +48,14 @@ export class Blog {
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @ManyToMany(() => Product, (product: Product) => product.blogs, {
-    onDelete: 'NO ACTION',
-    onUpdate: 'NO ACTION',
-  })
+  @ManyToMany(
+    () => ProductVariant,
+    (product: ProductVariant) => product.blogs,
+    {
+      onDelete: 'NO ACTION',
+      onUpdate: 'NO ACTION',
+    },
+  )
   @JoinTable({
     name: 'blog_product',
     joinColumn: {
@@ -63,7 +67,13 @@ export class Blog {
       referencedColumnName: 'id',
     },
   })
-  products: Product[];
+  products: ProductVariant[];
+
+  @ManyToMany(() => User, (user) => user.blogs, {
+    onDelete: 'NO ACTION',
+    onUpdate: 'NO ACTION',
+  })
+  users: User[];
 
   // @Column('text')
   // title: string;

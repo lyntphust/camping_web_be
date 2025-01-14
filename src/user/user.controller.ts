@@ -3,24 +3,20 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   HttpException,
   HttpStatus,
   Param,
   Post,
   Put,
-  Req,
-  Res,
 } from '@nestjs/common';
 
-import { Request, Response } from 'express';
-import { UserService } from './user.service';
-import { AuthPayload, GetUser } from 'src/decorator/getUser.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { AddProductToCartDto } from './dto/add-product.dto';
+import { AuthPayload, GetUser } from 'src/decorator/getUser.decorator';
 import { Public } from 'src/decorator/public.decorator';
+import { AddProductToCartDto } from './dto/add-product.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
+import { UserService } from './user.service';
 
 @Controller('user')
 @ApiBearerAuth()
@@ -28,70 +24,101 @@ import { UpdatePasswordDto } from './dto/updatePasswordDto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-
-@Put('/update')
-async updateUser(
-  @GetUser() user: AuthPayload,
-  @Body() updateUserDto: UpdateUserDto,
-) {
-  try {
-    return await this.userService.updateUser(user.id, updateUserDto);
-  } catch (error) {
-    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  @Put('/update')
+  async updateUser(
+    @GetUser() user: AuthPayload,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    try {
+      return await this.userService.updateUser(user.id, updateUserDto);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
-}
 
-@Put('/update-password')
-async updatePassword(
-  @GetUser() user: AuthPayload,
-  @Body() updatePasswordDto: UpdatePasswordDto,
-) {
-  try {
-    return await this.userService.updatePassword(user.id, updatePasswordDto);
-  } catch (error) {
-    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  @Put('/update-password')
+  async updatePassword(
+    @GetUser() user: AuthPayload,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ) {
+    try {
+      return await this.userService.updatePassword(user.id, updatePasswordDto);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
-}
 
-
-  
-// Yêu thích 1 sản phẩm
-@Post('/favorite/:productId')
-async favoriteProduct(
-  @GetUser() user: AuthPayload,
-  @Param('productId') productId: number,
-) {
-  try {
-    return await this.userService.addFavoriteProduct(user.id, productId);
-  } catch (error) {
-    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  // Yêu thích 1 sản phẩm
+  @Post('/favorite/:productId')
+  async favoriteProduct(
+    @GetUser() user: AuthPayload,
+    @Param('productId') productId: number,
+  ) {
+    try {
+      return await this.userService.addFavoriteProduct(user.id, productId);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
-}
 
-
-// Xem danh sách sản phẩm yêu thích
-@Get('/favorite')
-async getFavoriteProducts(@GetUser() user: AuthPayload) {
-  try {
-    return await this.userService.getFavoriteProducts(user.id);
-  } catch (error) {
-    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  // Yêu thích 1 blog
+  @Post('/favorite-blog/:blogId')
+  async favoriteBlog(
+    @GetUser() user: AuthPayload,
+    @Param('blogId') blogId: number,
+  ) {
+    try {
+      return await this.userService.addFavoriteBlog(user.id, blogId);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
-}
 
-// Xóa sản phẩm khỏi danh sách yêu thích
-@Delete('/favorite/:productId')
-async removeFavoriteProduct(
-  @GetUser() user: AuthPayload,
-  @Param('productId') productId: number,
-) {
-  try {
-    return await this.userService.removeFavoriteProduct(user.id, productId);
-  } catch (error) {
-    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  // Xem danh sách blog yêu thích
+  @Get('/favorite-blog')
+  async getFavoriteBlogs(@GetUser() user: AuthPayload) {
+    try {
+      return await this.userService.getFavoriteBlogs(user.id);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
-}
 
+  // Xóa sản phẩm khỏi danh sách yêu thích
+  @Delete('/favorite-blog/:blogId')
+  async removeFavoriteBlog(
+    @GetUser() user: AuthPayload,
+    @Param('blogId') blogId: number,
+  ) {
+    try {
+      return await this.userService.removeFavoriteBlog(user.id, blogId);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  // Xem danh sách sản phẩm yêu thích
+  @Get('/favorite')
+  async getFavoriteProducts(@GetUser() user: AuthPayload) {
+    try {
+      return await this.userService.getFavoriteProducts(user.id);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  // Xóa sản phẩm khỏi danh sách yêu thích
+  @Delete('/favorite/:productId')
+  async removeFavoriteProduct(
+    @GetUser() user: AuthPayload,
+    @Param('productId') productId: number,
+  ) {
+    try {
+      return await this.userService.removeFavoriteProduct(user.id, productId);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
 
   @Get('/cart')
   async getProductCart(@GetUser() user: AuthPayload) {
@@ -111,13 +138,13 @@ async removeFavoriteProduct(
 
   @Public()
   @Get('/:userId')
-async getUserById(@Param('userId') userId: number) {
-  try {
-    return await this.userService.getUserById(userId);
-  } catch (error) {
-    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  async getUserById(@Param('userId') userId: number) {
+    try {
+      return await this.userService.getUserById(userId);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
-}
 
   @Post('/add-cart')
   async addProductCart(
@@ -130,7 +157,6 @@ async getUserById(@Param('userId') userId: number) {
       user.id,
       quantity,
     );
-    console.log(user);
   }
 
   @Delete('/cart/:productId')
@@ -149,5 +175,4 @@ async getUserById(@Param('userId') userId: number) {
   ) {
     return await this.userService.deleteUser(userId);
   }
-
 }

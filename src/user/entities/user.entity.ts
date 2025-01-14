@@ -2,18 +2,19 @@ import {
   Column,
   Entity,
   JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+import { ChatbotHistory } from 'src/chatbot/entities/chatbot-history.entity';
+import { Comment } from 'src/comment/comment.entity';
+import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
+import { ProductCart } from 'src/product/entities/product-cart.entity';
 import { Order } from '../../order/entities/order.entity';
 import { Role } from '../../role/entities/role.entity';
-import { ProductCart } from 'src/product/entities/product-cart.entity';
 import { Blog } from './blog.entity';
-import { ChatbotHistory } from 'src/chatbot/entities/chatbot-history.entity';
-import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
-import { Comment } from 'src/comment/comment.entity';
 
 @Entity()
 export class User {
@@ -51,15 +52,26 @@ export class User {
   )
   productCarts: ProductCart[];
 
-  @OneToMany(() => Blog, (blog) => blog.user)
-  blogs: Blog[];
-
   @OneToMany(() => FavoriteProduct, (favorite) => favorite.user)
   favoriteProducts: FavoriteProduct[];
 
-  @OneToMany(() => ChatbotHistory, (chatHistory) => chatHistory.user)
-  chatbotHistories: ChatbotHistory[];
-
   @OneToMany(() => Comment, (comment) => comment.user)
   comments: Comment[];
+
+  @ManyToMany(() => Blog, (blog: Blog) => blog.users, {
+    onDelete: 'NO ACTION',
+    onUpdate: 'NO ACTION',
+  })
+  @JoinTable({
+    name: 'favorite_blog',
+    joinColumn: {
+      name: 'userId',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'blogId',
+      referencedColumnName: 'id',
+    },
+  })
+  blogs: Blog[];
 }

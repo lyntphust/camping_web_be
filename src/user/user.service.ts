@@ -8,6 +8,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
+import * as bcrypt from 'bcrypt';
 import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
 import { ProductCart } from 'src/product/entities/product-cart.entity';
 import { ProductVariant } from 'src/product/entities/product-variant.entity';
@@ -15,7 +16,8 @@ import { Product } from 'src/product/entities/product.entity';
 import { S3CoreService } from 'src/s3/src';
 import { RoleService } from '../role/role.service';
 import { UpdatePasswordDto } from './dto/updatePasswordDto';
-import * as bcrypt from 'bcrypt';
+import { Blog } from './entities/blog.entity';
+import { FavoriteBlog } from './entities/favorite-blog.entity';
 
 @Injectable()
 export class UserService {
@@ -25,14 +27,17 @@ export class UserService {
     private readonly productCartRepository: Repository<ProductCart>,
     @InjectRepository(ProductVariant)
     private readonly productVariantRepository: Repository<ProductVariant>,
+    @InjectRepository(Blog)
+    private readonly blogRepository: Repository<Blog>,
     @InjectRepository(FavoriteProduct)
     private readonly favoriteProductRepository: Repository<FavoriteProduct>,
+    @InjectRepository(FavoriteBlog)
+    private readonly favoriteBlogRepository: Repository<FavoriteBlog>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     private readonly roleService: RoleService,
     private readonly s3Service: S3CoreService,
   ) {}
-
 
   async updateUser(userId: number, updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.findOne(userId);
@@ -49,21 +54,25 @@ export class UserService {
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found.`);
     }
-  
-    const isPasswordMatching = await bcrypt.compare(updatePasswordDto.currentPassword, user.password);
+
+    const isPasswordMatching = await bcrypt.compare(
+      updatePasswordDto.currentPassword,
+      user.password,
+    );
     if (!isPasswordMatching) {
       throw new Error('Current password is incorrect.');
     }
-  
+
     const hashedPassword = await bcrypt.hash(updatePasswordDto.newPassword, 7);
     user.password = hashedPassword;
     return await this.userRepository.save(user);
   }
-  
 
-  
   async getUserById(userId: number) {
-    const user = await this.userRepository.find({where:{id:userId},relations:['role']});
+    const user = await this.userRepository.find({
+      where: { id: userId },
+      relations: ['role'],
+    });
     delete user['password'];
     if (!user) {
       throw new NotFoundException(`User with ID ${userId} not found.`);
@@ -80,71 +89,125 @@ export class UserService {
     return users;
   }
 
+  // Yêu thích 1 blog
+  async addFavoriteBlog(userId: number, blogId: number) {
+    const blog = await this.blogRepository.findOne(blogId);
 
+    if (!blog) {
+      throw new NotFoundException(`Blog with ID ${blogId} not found.`);
+    }
 
- // Yêu thích 1 sản phẩm
- async addFavoriteProduct(userId: number, productId: number) {
-  const product = await this.productRepository.findOne(productId);
-  if (!product) {
-    throw new NotFoundException(`Product with ID ${productId} not found.`);
+    const existingFavorite = await this.favoriteBlogRepository.findOne({
+      where: { user: { id: userId }, blog: { id: blogId } },
+    });
+
+    if (existingFavorite) {
+      throw new Error(`Blog with ID ${blogId} is already in your favorites.`);
+    }
+
+    const favorite = this.favoriteBlogRepository.create({
+      user: { id: userId },
+      blog: { id: blogId },
+    });
+
+    return await this.favoriteBlogRepository.save(favorite);
   }
 
-  const existingFavorite = await this.favoriteProductRepository.findOne({
-    where: { user: { id: userId }, product: { id: productId } },
-  });
+  // Xem danh sách blog yêu thích
+  async getFavoriteBlogs(userId: number) {
+    const favorites = await this.favoriteBlogRepository.find({
+      where: { user: { id: userId } },
+      relations: ['blog', 'blog.user'],
+    });
 
-  if (existingFavorite) {
-    throw new Error(`Product with ID ${productId} is already in your favorites.`);
+    return favorites.map((fav) => fav.blog);
   }
 
-  const favorite = this.favoriteProductRepository.create({
-    user: { id: userId },
-    product: { id: productId },
-  });
+  // Xóa blog khỏi danh sách yêu thích
+  async removeFavoriteBlog(userId: number, blogId: number) {
+    const favorite = await this.favoriteBlogRepository.findOne({
+      where: { user: { id: userId }, blog: { id: blogId } },
+    });
 
-  return await this.favoriteProductRepository.save(favorite);
-}
+    if (!favorite) {
+      throw new NotFoundException(
+        `Blog with ID ${blogId} is not in your favorites.`,
+      );
+    }
 
-// Xem danh sách sản phẩm yêu thích
-async getFavoriteProducts(userId: number) {
-  const favorites = await this.favoriteProductRepository.find({
-    where: { user: { id: userId } },
-    relations: ['product'],
-  });
+    await this.favoriteBlogRepository.remove(favorite);
 
-  const favoriteProducts = await Promise.all(
-    favorites.map(async (fav) => {
-      const photoLink = await this.s3Service.getLinkFromS3(fav.product.photo);
-      return {
-        productId: fav.product.id,
-        name: fav.product.name,
-        price: fav.product.price,
-        discount: fav.product.discount,
-        photo: photoLink,
-      };
-    }),
-  );
+    return {
+      message: `Blog with ID ${blogId} has been removed from your favorites.`,
+    };
+  }
 
-  return favoriteProducts;
-}
+  // Yêu thích 1 sản phẩm
+  async addFavoriteProduct(userId: number, productId: number) {
+    const product = await this.productRepository.findOne(productId);
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${productId} not found.`);
+    }
 
-// Xóa sản phẩm khỏi danh sách yêu thích
-async removeFavoriteProduct(userId: number, productId: number) {
-  const favorite = await this.favoriteProductRepository.findOne({
-    where: { user: { id: userId }, product: { id: productId } },
-  });
+    const existingFavorite = await this.favoriteProductRepository.findOne({
+      where: { user: { id: userId }, product: { id: productId } },
+    });
 
-  if (!favorite) {
-    throw new NotFoundException(
-      `Product with ID ${productId} is not in your favorites.`,
+    if (existingFavorite) {
+      throw new Error(
+        `Product with ID ${productId} is already in your favorites.`,
+      );
+    }
+
+    const favorite = this.favoriteProductRepository.create({
+      user: { id: userId },
+      product: { id: productId },
+    });
+
+    return await this.favoriteProductRepository.save(favorite);
+  }
+
+  // Xem danh sách sản phẩm yêu thích
+  async getFavoriteProducts(userId: number) {
+    const favorites = await this.favoriteProductRepository.find({
+      where: { user: { id: userId } },
+      relations: ['product'],
+    });
+
+    const favoriteProducts = await Promise.all(
+      favorites.map(async (fav) => {
+        const photoLink = await this.s3Service.getLinkFromS3(fav.product.photo);
+        return {
+          productId: fav.product.id,
+          name: fav.product.name,
+          price: fav.product.price,
+          discount: fav.product.discount,
+          photo: photoLink,
+        };
+      }),
     );
+
+    return favoriteProducts;
   }
 
-  await this.favoriteProductRepository.remove(favorite);
+  // Xóa sản phẩm khỏi danh sách yêu thích
+  async removeFavoriteProduct(userId: number, productId: number) {
+    const favorite = await this.favoriteProductRepository.findOne({
+      where: { user: { id: userId }, product: { id: productId } },
+    });
 
-  return { message: `Product with ID ${productId} has been removed from your favorites.` };
-}
+    if (!favorite) {
+      throw new NotFoundException(
+        `Product with ID ${productId} is not in your favorites.`,
+      );
+    }
 
+    await this.favoriteProductRepository.remove(favorite);
+
+    return {
+      message: `Product with ID ${productId} has been removed from your favorites.`,
+    };
+  }
 
   async findOne(id: number) {
     const user = await this.userRepository.findOne(id, {
@@ -209,28 +272,31 @@ async removeFavoriteProduct(userId: number, productId: number) {
     });
 
     if (existingCartItem) {
-      const newQuantity = existingCartItem.quantity += quantity;
+      const newQuantity = (existingCartItem.quantity += quantity);
 
       const productName = existingCartItem.productVariant.product.name;
 
       if (newQuantity > existingCartItem.productVariant.stock) {
         return {
           error: `Không đủ hàng cho sản phẩm ${productName}. Số lượng bạn muốn mua: ${existingCartItem.quantity}. Số lượng còn lại: ${existingCartItem.productVariant.stock}.`,
-        }
+        };
       }
 
       await this.productCartRepository.save(existingCartItem);
     } else {
-      const productVariant = await this.productVariantRepository.findOne(productId, {
-        relations: ['product'],
-      });
+      const productVariant = await this.productVariantRepository.findOne(
+        productId,
+        {
+          relations: ['product'],
+        },
+      );
 
       const productName = productVariant.product.name;
 
       if (quantity > productVariant.stock) {
         return {
           error: `Không đủ hàng cho sản phẩm ${productName}. Số lượng còn lại: ${productVariant.stock}.`,
-        }
+        };
       }
 
       await this.productCartRepository.save({
@@ -301,19 +367,19 @@ async removeFavoriteProduct(userId: number, productId: number) {
       const { password, ...rest } = user; // Loại bỏ trường `password`
       return rest;
     });
-  
+
     return sanitizedUsers;
   }
 
   async deleteUser(userId: number): Promise<{ message: string; user?: User }> {
     const userFound = await this.userRepository.findOne(userId);
-  
+
     if (!userFound) {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
-  
+
     await this.userRepository.delete(userId);
-  
+
     return {
       message: `User with ID ${userId} has been successfully deleted`,
     };

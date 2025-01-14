@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 
 import { Product } from './entities/product.entity';
 
@@ -34,10 +34,70 @@ export class ProductService {
     return products;
   }
 
+  async findBySearchText(searchText = '') {
+    const products = await this.productRepository
+      .createQueryBuilder()
+      .where('name ILIKE :searchText', { searchText: `%${searchText}%` })
+      .orWhere('category ILIKE :searchText', { searchText: `%${searchText}%` })
+      .orWhere('description ILIKE :searchText', {
+        searchText: `%${searchText}%`,
+      })
+      .getMany();
+
+    products.forEach(async (product) => {
+      const link = await this.s3Service.getLinkFromS3(product.photo);
+      product['image'] = link;
+    });
+
+    return products;
+  }
+
   async findAllByCategory(category: string) {
     const products = await this.productRepository.findOne({ category });
 
     return products;
+  }
+
+  async findAllVariants(searchText = '', ids?: number[]) {
+    if (ids?.length === 1 && ids[0] === 0) {
+      return [];
+    }
+
+    const queryBuilder =
+      this.productVariantRepository.createQueryBuilder('variant');
+
+    if (ids) {
+      queryBuilder.where('variant.id IN(:...ids)', { ids });
+    }
+
+    queryBuilder.leftJoinAndSelect('variant.product', 'product').andWhere(
+      new Brackets((qb) => {
+        qb.where('product.name ILIKE :searchText', {
+          searchText: `%${searchText}%`,
+        })
+          .orWhere('product.category ILIKE :searchText', {
+            searchText: `%${searchText}%`,
+          })
+          .orWhere('product.description ILIKE :searchText', {
+            searchText: `%${searchText}%`,
+          })
+          .orWhere('size ILIKE :searchText', {
+            searchText: `%${searchText}%`,
+          })
+          .orWhere('color ILIKE :searchText', {
+            searchText: `%${searchText}%`,
+          });
+      }),
+    );
+
+    const variants = await queryBuilder.getMany();
+
+    variants.forEach(async (variant) => {
+      const link = await this.s3Service.getLinkFromS3(variant.product.photo);
+      variant.product['image'] = link;
+    });
+
+    return variants;
   }
 
   async findManyByIds(arrayOfIds: Array<number>) {

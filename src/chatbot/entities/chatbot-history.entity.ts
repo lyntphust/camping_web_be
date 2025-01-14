@@ -1,5 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from 'src/user/entities/user.entity';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum ChatbotHistoryRole {
   MODEL = 'model',
@@ -11,13 +10,8 @@ export class ChatbotHistory {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, (user) => user.chatbotHistories, {
-    onDelete: 'CASCADE',
-  })
-  user: User;
-
   @Column()
-  userId: number;
+  sessionId: string;
 
   @Column({
     type: 'enum',

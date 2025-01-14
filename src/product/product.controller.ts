@@ -6,23 +6,19 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
-import { Permission } from 'src/role/decorators/permission.decorator';
-
-import { PermissionGuard } from 'src/role/guards/permission.guard';
-
-import { ProductService } from './product.service';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiBody, ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/decorator/public.decorator';
 import { BadRequestException } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/decorator/public.decorator';
+import { ProductService } from './product.service';
 
 @Controller('product')
 @ApiTags('Product')
@@ -32,15 +28,29 @@ export class ProductController {
 
   @Get()
   @Public()
-  @Public()
   async findAll() {
     return this.productService.findAll();
+  }
+
+  @Get('search')
+  @Public()
+  async filter(@Query('q') text = '') {
+    return this.productService.findBySearchText(text);
   }
 
   @Get('category/:category')
   @Public()
   async findAllByCategory(@Param('category') category: string) {
     return this.productService.findAllByCategory(category);
+  }
+
+  @Get('variant')
+  @Public()
+  async findAllVariant(
+    @Query('query') query = '',
+    @Query('ids') ids?: number[],
+  ) {
+    return this.productService.findAllVariants(query, ids);
   }
 
   @Get(':id')

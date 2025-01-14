@@ -2,25 +2,30 @@ import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from 'src/product/entities/product.entity';
+import { S3CoreService } from 'src/s3/src';
 import { Blog } from 'src/user/entities/blog.entity';
 import { Repository } from 'typeorm';
-import { ChatbotHistoryRole } from './entities/chatbot-history.entity';
+import {
+  ChatbotHistory,
+  ChatbotHistoryRole,
+} from './entities/chatbot-history.entity';
 
 @Injectable()
 export class ChatbotService {
   constructor(
     private genAI: GoogleGenerativeAI,
     private genAIModel: GenerativeModel,
-    private chatSessions: Object,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     @InjectRepository(Blog)
     private readonly blogRepository: Repository<Blog>,
+    @InjectRepository(ChatbotHistory)
+    private readonly chatbotHistoryRepository: Repository<ChatbotHistory>,
+    private readonly s3Service: S3CoreService,
   ) {
     this.genAIModel = this.genAI.getGenerativeModel({
       model: 'gemini-1.5-flash',
     });
-    this.chatSessions = {};
   }
 
   private async getWebsiteInfo() {
@@ -32,41 +37,52 @@ export class ChatbotService {
         role: ChatbotHistoryRole.USER,
         parts: [
           {
-            text: `
-          Remember: 
-          1. Your name is "Wildnest Bot" - a chatbot of Camping Web. Your website provides camping equipments and sharing blogs.
-          2. I am a user to your website.
-          3. Some products you have are:
-          ${products
-            .map(
-              ({ name, description = '', price, category }) => `
-            ${name}: ${description} ($${price}) - category: ${category}
-            `,
-            )
-            .join('')}
-          4. Some blogs you have are:
-          ${blogs.map(
-            ({ text, location = '' }) => `
-            ${text} (${location})
-
-          5. You in the language of the current message.
-            `,
-          )}
-        `,
+            text: 'Tên của bạn là "Wildnest Bot" và bạn là chatbot của Camping Web.',
+          },
+        ],
+      },
+      {
+        role: ChatbotHistoryRole.USER,
+        parts: [
+          {
+            text: 'Camping Web bán các sản phẩm cắm trại và cung cấp diễn đàn blog về camping (cắm trại).',
+          },
+        ],
+      },
+      {
+        role: ChatbotHistoryRole.USER,
+        parts: [
+          {
+            text: `Các sản phẩm: 
+            ${products
+              .map(
+                ({ id, name, description = '', price, category }) =>
+                  `${id}: ${name}: ${description} (${price} VNĐ) - Category: ${category}`,
+              )
+              .join('')}`,
+          },
+        ],
+      },
+      {
+        role: ChatbotHistoryRole.USER,
+        parts: [
+          {
+            text: `Các bài blog: 
+            ${blogs
+              .map(
+                ({ id, title, text, location = '' }) =>
+                  `${id}: ${title}(${location}) | ${text}`,
+              )
+              .join('')}`,
           },
         ],
       },
     ];
   }
 
-  private ApiRoleMapping = {
-    [ChatbotHistoryRole.USER]: 'user',
-    [ChatbotHistoryRole.MODEL]: 'bot',
-  };
-
   public async getMessageHistory(sessionId?: string) {
     const starterMessage = {
-      role: 'bot',
+      role: ChatbotHistoryRole.MODEL,
       content: 'Xin chào, tôi có thể giúp gì cho bạn?',
     };
 
@@ -74,50 +90,72 @@ export class ChatbotService {
       return [starterMessage];
     }
 
-    const chatSession = this.chatSessions[sessionId];
+    const savedHistory = await this.chatbotHistoryRepository.find({
+      where: {
+        sessionId,
+      },
+    });
 
-    if (!chatSession) {
-      return [starterMessage];
-    }
+    const messages = [starterMessage];
 
-    const history = await chatSession.getHistory();
-
-    const messages = [];
-
-    for (const message of history) {
-      messages.push({
-        role: this.ApiRoleMapping[message.role],
-        content: message.parts.map((part) => part.text).join(''),
-      });
-    }
-
-    if (messages.length === 0) {
-      messages.push(starterMessage);
-    } else {
-      messages[0] = starterMessage;
+    if (savedHistory.length) {
+      for (const { role, content } of savedHistory) {
+        messages.push({
+          role,
+          content,
+        });
+      }
     }
 
     return messages;
   }
 
   async sendChat(userMessage: string, sessionId?: string) {
-    let sessionToUse = sessionId ?? Math.random().toString();
+    const sessionToUse = sessionId ?? Math.random().toString();
+    const history = await this.getWebsiteInfo();
 
-    let resultSession = this.chatSessions[sessionToUse];
+    const savedHistory = await this.chatbotHistoryRepository.find({
+      where: {
+        sessionId: sessionToUse,
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
 
-    if (!resultSession) {
-      // Get products and blogs data from the website
-      const history = await this.getWebsiteInfo();
-
-      resultSession = this.genAIModel.startChat({ history });
-
-      this.chatSessions[sessionToUse] = resultSession;
+    if (savedHistory.length) {
+      for (const message of savedHistory) {
+        history.push({
+          role: message.role,
+          parts: [
+            {
+              text: message.content,
+            },
+          ],
+        });
+      }
     }
+
+    const resultSession = this.genAIModel.startChat({ history });
 
     // Call OpenAI API
     const result = await resultSession.sendMessage(userMessage);
 
     const assistantMessage = result.response.text() || '';
+
+    await this.chatbotHistoryRepository.save({
+      sessionId: sessionToUse,
+      role: ChatbotHistoryRole.USER,
+      content: userMessage,
+      createdAt: new Date(),
+    });
+
+    await this.chatbotHistoryRepository.save({
+      sessionId: sessionToUse,
+      role: ChatbotHistoryRole.MODEL,
+      content: assistantMessage,
+      createdAt: new Date(),
+    });
 
     return {
       message: assistantMessage,

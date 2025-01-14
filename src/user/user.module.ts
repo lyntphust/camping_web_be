@@ -1,22 +1,23 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { User } from './entities/user.entity';
 import { Permission } from './entities/permission.entity';
+import { User } from './entities/user.entity';
 
-import { RoleModule } from '../role/role.module';
 import { S3CoreModule } from 'src/s3/src/s3.module';
+import { RoleModule } from '../role/role.module';
 
-import { UserService } from './user.service';
+import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
 import { ProductCart } from 'src/product/entities/product-cart.entity';
 import { ProductVariant } from 'src/product/entities/product-variant.entity';
-import { UserController } from './user.controller';
+import { Product } from 'src/product/entities/product.entity';
 import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
-import { Blog } from './entities/blog.entity';
 import { BlogProduct } from './entities/blog-product.entity';
-import { Product } from 'src/product/entities/product.entity';
-import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
+import { Blog } from './entities/blog.entity';
+import { FavoriteBlog } from './entities/favorite-blog.entity';
+import { UserController } from './user.controller';
+import { UserService } from './user.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -27,6 +28,7 @@ import { FavoriteProduct } from 'src/product/entities/favorite-product.entity';
       Blog,
       Product,
       FavoriteProduct,
+      FavoriteBlog,
       BlogProduct,
     ]),
     RoleModule,

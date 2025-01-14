@@ -7,11 +7,13 @@ import { ChatbotService } from './chatbot.service';
 import { ChatbotHistory } from './entities/chatbot-history.entity';
 import { Product } from 'src/product/entities/product.entity';
 import { Blog } from 'src/user/entities/blog.entity';
+import { S3CoreModule } from 'src/s3/src';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ChatbotHistory, Product, Blog]),
     ConfigModule,
+    S3CoreModule,
   ],
   controllers: [ChatbotController],
   providers: [

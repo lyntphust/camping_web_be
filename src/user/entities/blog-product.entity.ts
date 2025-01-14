@@ -1,3 +1,4 @@
+import { ProductVariant } from 'src/product/entities/product-variant.entity';
 import { Product } from 'src/product/entities/product.entity';
 import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Blog } from './blog.entity';
@@ -15,12 +16,12 @@ export class BlogProduct {
     onUpdate: 'NO ACTION',
   })
   @JoinColumn([{ name: 'blogId', referencedColumnName: 'id' }])
-  blog: Blog[];
+  blog: Blog;
 
-  @ManyToOne(() => Product, (product) => product.blogs, {
+  @ManyToOne(() => ProductVariant, (product) => product.blogs, {
     onDelete: 'NO ACTION',
     onUpdate: 'NO ACTION',
   })
   @JoinColumn([{ name: 'productId', referencedColumnName: 'id' }])
-  product: Product[];
+  product: Product;
 }
