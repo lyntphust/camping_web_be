@@ -49,7 +49,16 @@ export class ProductService {
       product['image'] = link;
     });
 
-    return products;
+    const productDetails = await Promise.all(
+      products.map(async (product) => {
+        const variants = await this.productVariantRepository.find({
+          where: { product },
+        });
+        return { ...product, variants };
+      }),
+    );
+
+    return productDetails;
   }
 
   async findAllByCategory(category: string) {
