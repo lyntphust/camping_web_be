@@ -34,7 +34,7 @@ export class OrderService {
   ) {}
 
   async createOrder(userId: number, createOrderDto: CreateOrderDto) {
-    const { address, phone, products } = createOrderDto;
+    const { address, phone, products, shippingFee } = createOrderDto;
 
     let orderPrice = 0;
 
@@ -68,7 +68,7 @@ export class OrderService {
           (product.quantity *
             existingVariant.price *
             (100 - existingVariant.product.discount)) /
-            100;
+          100;
 
         return {
           productVariant: existingVariant,
@@ -79,7 +79,7 @@ export class OrderService {
     );
 
     const savedOrder = await this.orderRepository.save({
-      price: orderPrice + 50000,
+      price: orderPrice + shippingFee,
       address,
       phone,
       status: 'CREATED',
@@ -118,27 +118,27 @@ export class OrderService {
     }
     const updatedOrders = await Promise.all(
       orders.map(async (order) => {
-      const updatedOrderProducts = await Promise.all(
-        order.OrdersProducts.map(async (orderProduct) => {
-        const photoKey = orderProduct.productVariant.product.photo;
-        let productImage = null;
+        const updatedOrderProducts = await Promise.all(
+          order.OrdersProducts.map(async (orderProduct) => {
+            const photoKey = orderProduct.productVariant.product.photo;
+            let productImage = null;
 
-        // Only fetch the image link if a photo key exists
-        if (photoKey) {
-          productImage = await this.s3Service.getLinkFromS3(photoKey);
-        }
+            // Only fetch the image link if a photo key exists
+            if (photoKey) {
+              productImage = await this.s3Service.getLinkFromS3(photoKey);
+            }
+
+            return {
+              ...orderProduct,
+              image: productImage,
+            };
+          }),
+        );
 
         return {
-          ...orderProduct,
-          image: productImage,
+          ...order,
+          OrdersProducts: updatedOrderProducts,
         };
-        }),
-      );
-
-      return {
-        ...order,
-        OrdersProducts: updatedOrderProducts,
-      };
       }),
     );
 
