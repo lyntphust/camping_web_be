@@ -38,6 +38,10 @@ export class CreateOrderDto {
   readonly phone: string;
 
   @ApiProperty()
+  @IsInt()
+  shippingFee: number;
+
+  @ApiProperty()
   readonly price: number;
 
   @ApiProperty({
