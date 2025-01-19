@@ -12,7 +12,13 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    allowedHeaders: ['accept', 'authorization', 'referer', 'user-agent'],
+    allowedHeaders: [
+      'accept',
+      'content-type',
+      'authorization',
+      'referer',
+      'user-agent',
+    ],
     origin: ['http://localhost:3000', 'https://camping-web-fe-beta.vercel.app'],
     credentials: true,
   });
